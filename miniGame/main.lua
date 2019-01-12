@@ -2,6 +2,9 @@
 -- estados
 pontos  = 0 
 record = 0
+angular = 0
+delta_angular = 1
+iluminacao = 0
 
 -- objetos de imagens
 jogador = {x = 200, y = 710, speed = 150, vivo = true, img = nil }
@@ -56,9 +59,12 @@ function love.load(arg)
 
 
 	local pixelcode = [[
+
+	extern int base;
 	vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screenCoords){
-	  vec4 nColor = vec4(screenCoords.y / 800);
-	  return Texel(texture, texture_coords) * nColor;
+	  float r = screenCoords.y / base;
+	  vec4 nColor = vec4(r);
+	  return Texel(texture, texture_coords) * nColor * color;
 	}
 	]]
 
@@ -72,10 +78,14 @@ end
 -- calcula
 function love.update(dt)
 
-	-- sai com esc
-	if love.keyboard.isDown('escape') then
-		love.event.push('quit')
-	end
+	
+	angular = angular + delta_angular * dt
+	if angular >  1 then
+		delta_angular = -1
+	elseif angular < 0.5 then
+		delta_angular = 1	
+	end	
+
 
 	-- atualiza dificuldade
 
@@ -158,7 +168,13 @@ function love.update(dt)
 		inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
 		if (table.getn(inimigo.lista) < inimigo.maximo) then
 			-- cria novo inimigo
-			table.insert(inimigo.lista, { x = math.random(10, love.graphics.getWidth()  - 80), y = -30})
+			local dx = math.random(-1,1) * pontos
+			if (dx > 100) then
+				dx = 100
+			elseif dx < -100 then
+				dx = -100
+			end
+			table.insert(inimigo.lista, { x = math.random(10, love.graphics.getWidth()  - 80), y = -30, delta_x = dx * dt})
 		end
 	end
 
@@ -191,7 +207,11 @@ function love.update(dt)
 
 	-- atualiza posicao inimigo
 	for i, iniTmp in ipairs(inimigo.lista) do
-		iniTmp.y = iniTmp.y + (200 * dt)
+		iniTmp.y = iniTmp.y + (200 * dt)		
+		if iniTmp.x > 400 or iniTmp.x < 0 then
+			iniTmp.delta_x = -iniTmp.delta_x
+		end
+		iniTmp.x = iniTmp.x + iniTmp.delta_x
 
 		if iniTmp.y > 850 then -- remove inimigos quando sai da tela
 			table.remove(inimigo.lista, i)
@@ -294,6 +314,10 @@ end
 
 function shaderOn()
 	love.graphics.setShader(myshader)
+	if iluminacao > 600 then
+		iluminacao = 600
+	end	
+	myshader:send("base", 800 - iluminacao)
 end
 
 function shadeOff()
@@ -303,9 +327,9 @@ end
 -- desenha
 function love.draw(dt)
 
+	
 	shaderOn()
-
-
+	
 	love.graphics.setBackgroundColor( 0, 0.1, 0.3, 0.1 )
 	love.graphics.draw(solo.img, 0, solo.y1)
 	love.graphics.draw(solo.img, 0, solo.y2)
@@ -321,18 +345,25 @@ function love.draw(dt)
 	love.graphics.draw(nuvem.img, 0, nuvem.y1 + 300)
 	love.graphics.draw(nuvem.img, 0, nuvem.y2 + 300)
 
-	shadeOff()
+	
 
+	love.graphics.setColor(angular, angular, angular, 1)
 	for i, iniTmp in ipairs(inimigo.lista) do
 		love.graphics.draw(inimigo.img, iniTmp.x, iniTmp.y)
 	end
 
-	for i, blTmp in ipairs(balas.lista) do
-		love.graphics.draw(balas.img, blTmp.x, blTmp.y)
-	end
-
+	iluminacao = 0
 	for i, expTmp in ipairs(explosao.lista) do
 		love.graphics.draw(explosao.imgs[expTmp.indice], expTmp.x, expTmp.y);
+		iluminacao = iluminacao + 200
+	end
+
+	shadeOff()
+	
+	love.graphics.setColor(1, 1, 1, 1)
+
+	for i, blTmp in ipairs(balas.lista) do
+		love.graphics.draw(balas.img, blTmp.x, blTmp.y)
 	end
 
 	love.graphics.setColor(255, 255, 255)
@@ -345,8 +376,15 @@ function love.draw(dt)
 		love.graphics.draw(jogador.img, jogador.x, jogador.y)
 	else
 		love.graphics.print("Pressione 'R' para reiniciarm Esc para sair", love.graphics:getWidth()/2-140, love.graphics:getHeight()/2-10)
+		
 	end
 
 	--love.graphics.print("FPS:"..love.timer.getFPS(), 9, 780)
+	
+
+	--love.graphics.print("ANG:"..angular, 9, 780)
+
+	
+	
 
 end
