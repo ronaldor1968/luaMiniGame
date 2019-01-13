@@ -36,6 +36,13 @@ end
 
 -- Loading
 function love.load(arg)
+	local file = io.open("data", "r")
+	if file == nil then
+		record = 0
+	else		
+		record = tonumber(file:read())
+		file:close()	
+	end	
 	inimigo.img = love.graphics.newImage("assets/inimigo.png")
 	inimigo.som = love.audio.newSource("assets/explosao1.ogg", "static")
 	inimigo.som:setVolume(0.5)
@@ -78,6 +85,89 @@ end
 -- calcula
 function love.update(dt)
 
+	if not jogador.vivo and love.keyboard.isDown('r') then
+		-- remove balas e inimigos fora da area de jogo
+
+		jogador.x = math.random(80, love.graphics.getWidth()  - 180)
+		jogador.y = 710
+		jogador.vivo = true
+
+	end
+
+	if love.keyboard.isDown('left','a') then
+		if jogador.x > 0 then -- binds us to the map
+			jogador.x = jogador.x - (jogador.speed*dt)
+		end
+	elseif love.keyboard.isDown('right','d') then
+		if jogador.x < (love.graphics.getWidth() - jogador.img:getWidth()) then
+			jogador.x = jogador.x + (jogador.speed*dt)
+		end
+	elseif love.keyboard.isDown('up','w') then
+		if jogador.y > 0 then
+			jogador.y = jogador.y - (jogador.speed*dt)
+		end
+	elseif love.keyboard.isDown('down','s') then
+		if jogador.y < 710  then
+			jogador.y = jogador.y + (jogador.speed*dt)
+		end
+	end
+
+	if jogador.vivo and love.keyboard.isDown('space', 'rctrl', 'lctrl') and balas.recarregado then
+		-- cria balas
+		newBullet = { x = jogador.x + (jogador.img:getWidth() - balas.img:getWidth())/2, y = jogador.y }
+		table.insert(balas.lista, newBullet)
+		balas.recarregado = false
+		balas.tempoAposUltimoTiro = balas.tempoRecarga
+		balas.som:stop()
+		balas.som:play()
+	end	
+
+	local deltaTmp1 = 5 * dt
+	local deltaTmp2 = 15 * dt
+	local deltaTmp3 = 250 * dt;
+	local deltaTmp4 = 1 * dt
+	local deltaTmp5 = 350 * dt
+	local deltaTmp6 = 200 * dt
+	local deltaTmp7 = 30 * dt;
+
+	for i, expTmp in ipairs(explosao.lista) do
+		expTmp.tempo = expTmp.tempo  -  deltaTmp1
+		expTmp.y = expTmp.y + deltaTmp2
+		if (expTmp.tempo < 0) then
+			expTmp.tempo = explosao.tempoExplosao
+			if expTmp.indice < 8 then
+				expTmp.indice = expTmp.indice + 1
+			else
+				table.remove(explosao.lista, i)
+			end
+		end
+	end
+
+
+	-- move nuvens e solo
+
+	nuvem.y1 = nuvem.y1 + deltaTmp3
+	nuvem.y2 = nuvem.y2 + deltaTmp3
+	if (nuvem.y1 > 0) then
+		nuvem.y1 = -6400
+	end
+	if (nuvem.y2 > 0) then
+		nuvem.y2 = -6400
+	end
+
+	solo.y1 = solo.y1 + deltaTmp7
+	solo.y2 = solo.y2 + deltaTmp7
+	if (solo.y1 > 0) then
+		solo.y1 = -6400
+	end
+	if (solo.y2 > 0) then
+		solo.y2 = -6400
+	end
+
+	-- se estiver mosto, não atualiza o resto
+	if not jogador.vivo then 
+		return
+	end
 	
 	angular = angular + delta_angular * dt
 	if angular >  1 then
@@ -120,37 +210,14 @@ function love.update(dt)
 		end
 	end
 
-	-- calcula posicoes e tempos
-
-	local incNuvem = (250 * dt);
-	nuvem.y1 = nuvem.y1 + incNuvem
-	nuvem.y2 = nuvem.y2 + incNuvem
-	if (nuvem.y1 > 0) then
-		nuvem.y1 = -6400
-	end
-	if (nuvem.y2 > 0) then
-		nuvem.y2 = -6400
-	end
-
-	local incSolo = (30 * dt);
-	solo.y1 = solo.y1 + incSolo
-	solo.y2 = solo.y2 + incSolo
-	if (solo.y1 > 0) then
-		solo.y1 = -6400
-	end
-	if (solo.y2 > 0) then
-		solo.y2 = -6400
-	end
-
-	local deltaTmp1 = 1 * dt
 
 	-- conta o tempo para as balas e os inimigos
-	balas.tempoAposUltimoTiro = balas.tempoAposUltimoTiro - deltaTmp1
+	balas.tempoAposUltimoTiro = balas.tempoAposUltimoTiro - deltaTmp4
 	if (balas.tempoAposUltimoTiro < 0) then
 		balas.recarregado = true
 	end
 
-	phase.tempoAposUltimoTiro = phase.tempoAposUltimoTiro - deltaTmp1
+	phase.tempoAposUltimoTiro = phase.tempoAposUltimoTiro - deltaTmp4
 	if phase.y > 800 and phase.tempoAposUltimoTiro < 0 then
 		-- novo tipo de phase
 		phase.y = -800
@@ -159,11 +226,11 @@ function love.update(dt)
 		phase.som:stop()
 		phase.som:play()
 	else
-		phase.y = phase.y + (350 * dt)
+		phase.y = phase.y + deltaTmp5
 	end
 
 
-	inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoAposCriarUltimoInimigo - deltaTmp1
+	inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoAposCriarUltimoInimigo - deltaTmp4
 	if inimigo.tempoAposCriarUltimoInimigo < 0 then
 		inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
 		if (table.getn(inimigo.lista) < inimigo.maximo) then
@@ -179,35 +246,20 @@ function love.update(dt)
 	end
 
 
-	local deltaTmp2 = 5 * dt
-	local deltaTmp3 = 15 * dt
-
-	for i, expTmp in ipairs(explosao.lista) do
-		expTmp.tempo = expTmp.tempo  -  deltaTmp2
-		expTmp.y = expTmp.y + deltaTmp3
-		if (expTmp.tempo < 0) then
-			expTmp.tempo = explosao.tempoExplosao
-			if expTmp.indice < 8 then
-				expTmp.indice = expTmp.indice + 1
-			else
-				table.remove(explosao.lista, i)
-			end
-		end
-	end
-
-
 	-- atualiza posicao das balas
 	for i, blTmp in ipairs(balas.lista) do
-		blTmp.y = blTmp.y - (250 * dt)
+		blTmp.y = blTmp.y - deltaTmp3
 
 		if blTmp.y < 0 then -- remove balas when they pass off the screen
 			table.remove(balas.lista, i)
 		end
 	end
 
+	
+
 	-- atualiza posicao inimigo
 	for i, iniTmp in ipairs(inimigo.lista) do
-		iniTmp.y = iniTmp.y + (200 * dt)		
+		iniTmp.y = iniTmp.y + deltaTmp6
 		if iniTmp.x > 400 or iniTmp.x < 0 then
 			iniTmp.delta_x = -iniTmp.delta_x
 		end
@@ -245,60 +297,24 @@ function love.update(dt)
 		end
 	end
 
-
-
-	if jogador.vivo and testaColisao(phase, jogador)
+	if testaColisao(phase, jogador)
 	then
 		jogador.som:play()
 		table.insert(explosao.lista, { x = jogador.x - 80 , y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
 		endGame()
 	end
 
-
-	if love.keyboard.isDown('left','a') then
-		if jogador.x > 0 then -- binds us to the map
-			jogador.x = jogador.x - (jogador.speed*dt)
-		end
-	elseif love.keyboard.isDown('right','d') then
-		if jogador.x < (love.graphics.getWidth() - jogador.img:getWidth()) then
-			jogador.x = jogador.x + (jogador.speed*dt)
-		end
-	elseif love.keyboard.isDown('up','w') then
-		if jogador.y > 0 then
-			jogador.y = jogador.y - (jogador.speed*dt)
-		end
-	elseif love.keyboard.isDown('down','s') then
-		if jogador.y < 710  then
-			jogador.y = jogador.y + (jogador.speed*dt)
-		end
-	end
-
-	if jogador.vivo and love.keyboard.isDown('space', 'rctrl', 'lctrl') and balas.recarregado then
-		-- cria balas
-		newBullet = { x = jogador.x + (jogador.img:getWidth() - balas.img:getWidth())/2, y = jogador.y }
-		table.insert(balas.lista, newBullet)
-		balas.recarregado = false
-		balas.tempoAposUltimoTiro = balas.tempoRecarga
-		balas.som:stop()
-		balas.som:play()
-	end
-
-	if not jogador.vivo and love.keyboard.isDown('r') then
-		-- remove balas e inimigos fora da area de jogo
-
-		jogador.x = math.random(80, love.graphics.getWidth()  - 180)
-		jogador.y = 710
-		jogador.vivo = true
-
-	end
-
 end
 
 function endGame()
-	jogador.vivo = false
+	jogador.vivo = false	
 	if record < pontos then
 		record = pontos
 	end
+
+	file = io.open("data", "w")
+	file:write(record)
+	file:close()
 
 	balas.lista = {}
 	balas.tempoRecarga = 0.5
@@ -348,6 +364,7 @@ function love.draw(dt)
 	
 
 	love.graphics.setColor(angular, angular, angular, 1)
+	
 	for i, iniTmp in ipairs(inimigo.lista) do
 		love.graphics.draw(inimigo.img, iniTmp.x, iniTmp.y)
 	end
