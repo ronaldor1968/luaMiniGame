@@ -284,8 +284,7 @@ function love.update(dt)
 			end
 		end
 
-		if jogador.vivo and
-		testesSimplesDeColisao(iniTmp.x, iniTmp.y, inimigo.img:getWidth(), inimigo.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
+		if testesSimplesDeColisao(iniTmp.x, iniTmp.y, inimigo.img:getWidth(), inimigo.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
 		then
 			jogador.som:play()
 			inimigo.som:stop()
