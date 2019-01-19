@@ -161,14 +161,9 @@ function love.update(dt)
 		end
 	end
 	for i, cblTmp in ipairs(cobra.lista) do
-		local a = angular + i * 0.628
-		if pontos < 40 then
+		local a = angular + i * 0.628 * math.max(pontos,100) / 100
 			cblTmp.x = math.sin(a) * 100
 			cblTmp.y = -40 * i
-		else
-			cblTmp.x = math.sin(a) * math.min(pontos,100)
-			cblTmp.y = math.cos(a) * math.min(pontos / 2,300)
-		end
 	end
 
 	-- move nuvens e solo
@@ -428,7 +423,7 @@ function love.draw(dt)
 	iluminacao = 0
 	for i, expTmp in ipairs(explosao.lista) do
 		love.graphics.draw(explosao.imgs[expTmp.indice], expTmp.x, expTmp.y);
-		iluminacao = iluminacao + 200
+		iluminacao = iluminacao + 100
 	end
 
 	shadeOff()
