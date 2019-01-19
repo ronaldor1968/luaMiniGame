@@ -1,4 +1,4 @@
-local nivel2 = {limite = 200}
+local nivel3 = {limite = 300}
 
 angular = 0
 iluminacao = 0
@@ -13,8 +13,12 @@ solo = {img = nil, y1 = -3200, y2 = -6400}
 explosao = {imgs={}, lista = {}, tempoExplosao = 0.5}
 myshader = nil
 musica = {som = nil}
+cobra = {img = nil, lista = {}, xbase = 240, ybase = -1000}
+for i=1,10 do
+	table.insert(cobra.lista, {x = 0 , y = 0, viva = true})
+end
 
-function nivel2.inicia(recursos)
+function nivel3.inicia(recursos)
   inimigo.img = recursos.imgs.inimigo
 	inimigo.som = recursos.sons.inimigo
 	inimigo.som:setVolume(0.5)
@@ -35,6 +39,7 @@ function nivel2.inicia(recursos)
 	musica.som = recursos.sons.musica1
 	musica.som:setVolume(0.1)
 	musica.som:setLooping(true)
+	cobra.img = recursos.imgs.cobra
 
 	local pixelcode = [[
 
@@ -49,10 +54,10 @@ function nivel2.inicia(recursos)
 	myshader = love.graphics.newShader(pixelcode)
 	print(myshader:getWarnings())
 	musica.som:play()
-  jogador.vivo = true
+	jogador.vivo = true
 end
 
-function nivel2.fim()
+function nivel3.fim()
   -- reinicia os valores
   balas.lista = {}
   balas.tempoRecarga = 0.5
@@ -64,11 +69,10 @@ function nivel2.fim()
   phase.tempoAposUltimoTiro = phase.intervaloMaximo
   phase.y = 1000
   jogador.vivo = false
-  musica.som:stop()
+	musica.som:stop()
 end
 
-function nivel2.atualiza(dt)
-
+function nivel3.atualiza(dt)
 
 	if love.keyboard.isDown('left','a') then
 		if jogador.x > 0 then -- binds us to the map
@@ -119,6 +123,19 @@ function nivel2.atualiza(dt)
 		end
 	end
 
+	cobra.ybase = cobra.ybase + deltaTmp6
+	if cobra.ybase > 1400 then
+		cobra.ybase = -3000
+		for i, cblTmp in ipairs(cobra.lista) do
+				cblTmp.viva = true
+		end
+	end
+	for i, cblTmp in ipairs(cobra.lista) do
+		local a = angular + i * 0.628 * math.max(pontos,100) / 100
+			cblTmp.x = math.sin(a) * 100
+			cblTmp.y = -40 * i
+	end
+
 	-- move nuvens e solo
 
 	nuvem.y1 = nuvem.y1 + deltaTmp3
@@ -139,7 +156,7 @@ function nivel2.atualiza(dt)
 		solo.y2 = -6400
 	end
 
-  -- atualiza posicao das balas
+	-- atualiza posicao das balas
 	for i, blTmp in ipairs(balas.lista) do
 		blTmp.y = blTmp.y - deltaTmp3
 
@@ -147,24 +164,24 @@ function nivel2.atualiza(dt)
 			table.remove(balas.lista, i)
 		end
 	end
-  -- atualiza posicao inimigo
-  for i, iniTmp in ipairs(inimigo.lista) do
-    iniTmp.y = iniTmp.y + deltaTmp6
-    if iniTmp.x > 400 or iniTmp.x < 0 then
-      iniTmp.delta_x = -iniTmp.delta_x
-    end
-    iniTmp.x = iniTmp.x + iniTmp.delta_x
 
-    if iniTmp.y > 850 then -- remove inimigos quando sai da tela
-      table.remove(inimigo.lista, i)
-    end
-  end
+	-- atualiza posicao inimigo
+	for i, iniTmp in ipairs(inimigo.lista) do
+		iniTmp.y = iniTmp.y + deltaTmp6
+		if iniTmp.x > 400 or iniTmp.x < 0 then
+			iniTmp.delta_x = -iniTmp.delta_x
+		end
+		iniTmp.x = iniTmp.x + iniTmp.delta_x
+
+		if iniTmp.y > 850 then -- remove inimigos quando sai da tela
+			table.remove(inimigo.lista, i)
+		end
+	end
 
 	-- se estiver mosto, não atualiza o resto
 	if not jogador.vivo then
 		return pontos, false
 	end
-
 
 	angular = angular + dt
 	if angular >  3.14 then
@@ -240,8 +257,6 @@ function nivel2.atualiza(dt)
 		end
 	end
 
-
-
 	-- testa cosiloes
 	for i, iniTmp in ipairs(inimigo.lista) do
 		for j, blTmp in ipairs(balas.lista) do
@@ -265,7 +280,33 @@ function nivel2.atualiza(dt)
 			table.remove(inimigo.lista, i)
 			table.insert(explosao.lista, { x = iniTmp.x - 80, y = iniTmp.y - 80, tempo = explosao.tempoExplosao, indice = 1})
 			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-      jogador.vivo = false
+			jogador.vivo = false
+		end
+
+	end
+
+	for i, clbBase in ipairs(cobra.lista) do
+		for j, blTmp in ipairs(balas.lista) do
+			if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), blTmp.x, blTmp.y, balas.img:getWidth(), balas.img:getHeight()) then
+				inimigo.som:stop()
+				inimigo.som:play()
+				pontos = pontos + 1
+				table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+				table.remove(balas.lista, j)
+				clbBase.viva = false
+			end
+		end
+
+
+		if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
+		then
+			jogador.som:play()
+			inimigo.som:stop()
+			inimigo.som:play()
+			table.remove(cobra.lista, i)
+			table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+			jogador.vivo = false
 		end
 
 	end
@@ -280,7 +321,7 @@ function nivel2.atualiza(dt)
 end
 
 function shaderOn()
-	myshader:send("base", 600 - iluminacao)
+  myshader:send("base", 800 - iluminacao)
 	love.graphics.setShader(myshader)
 	if iluminacao > 600 then
 		iluminacao = 600
@@ -291,7 +332,7 @@ function shadeOff()
 	love.graphics.setShader()
 end
 
-function nivel2.desenha(dt)
+function nivel3.desenha(dt)
   love.graphics.setBackgroundColor( 0, 0.1, 0.3, 0.1 )
 
 	shaderOn()
@@ -328,14 +369,21 @@ function nivel2.desenha(dt)
 
 	shadeOff()
 
+
+
+  for i, cblTmp in ipairs(cobra.lista) do
+		if cblTmp.viva then
+			love.graphics.draw(cobra.img, cobra.xbase + cblTmp.x, cobra.ybase + cblTmp.y)
+		end
+	end
+
 	for i, blTmp in ipairs(balas.lista) do
 		love.graphics.draw(balas.img, blTmp.x, blTmp.y)
 	end
 
-  if jogador.vivo then
+	if jogador.vivo then
 		love.graphics.draw(jogador.img, jogador.x, jogador.y)
 	end
-
 end
 
-return nivel2
+return nivel3

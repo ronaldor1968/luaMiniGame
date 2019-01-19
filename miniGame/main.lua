@@ -4,8 +4,35 @@ require "utils"
 pontos  = 0
 record = 0
 continua = true
+numeroNivel = 1
 
 nivel = require "nivel1"
+
+local recursos = {
+	imgs = {
+		inimigo = love.graphics.newImage("assets/inimigo.png"),
+		jogador = love.graphics.newImage("assets/aviao.png"),
+		balas = love.graphics.newImage("assets/bala.png"),
+		phase = love.graphics.newImage("assets/phaser.png"),
+		nuvem = love.graphics.newImage("assets/nuvem.png"),
+		solo = love.graphics.newImage("assets/solo.png"),
+		cobra = love.graphics.newImage("assets/sphera.png"),
+		explosao = {nil,nil,nil,nil,nil,nil,nil,nil}
+	},
+
+	sons = {
+		inimigo = love.audio.newSource("assets/explosao1.ogg", "static"),
+		jogador = love.audio.newSource("assets/explosao2.ogg", "static"),
+		balas = love.audio.newSource("assets/tiro.ogg", "static"),
+		phase = love.audio.newSource("assets/phase.ogg", "static"),
+		musica1 = love.audio.newSource("assets/musica1.ogg", "static")
+	}
+}
+
+for i = 1, 8 do
+	recursos.imgs.explosao[i] = love.graphics.newImage("assets/exp"..i..".png")
+end
+
 
 -- Loading
 function love.load(arg)
@@ -17,7 +44,7 @@ function love.load(arg)
 		file:close()
 	end
 
-	nivel.inicia(arg)
+	nivel.inicia(recursos)
 
 
 end
@@ -25,7 +52,8 @@ end
 
 -- calcula
 function love.update(dt)
-
+	local novoNivel = love.thread.getChannel('nivel'):pop()
+	nivel = novoNivel or nivel
 	if love.keyboard.isDown('escape') then
 		love.event.quit(0)
 	end
@@ -35,7 +63,7 @@ function love.update(dt)
 
 		nivel.fim()
 		nivel = require ("nivel1")
-		nivel.inicia()
+		nivel.inicia(recursos)
 		continua = true
 
 	end
@@ -46,8 +74,13 @@ function love.update(dt)
 	else
 		if pontos > nivel.limite then
 			nivel.fim()
-			nivel = require "nivel2"
-			nivel.inicia()
+			local antigoNivel = numeroNivel
+			numeroNivel = math.min(numeroNivel + 1, 3)
+			if numeroNivel ~= antigoNivel then
+				nivel = require ("nivel" .. numeroNivel)
+				nivel.inicia(recursos)
+			end
+			continua = true
 		end
 	end
 end

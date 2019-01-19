@@ -1,4 +1,4 @@
-local nivel1 = {limite = 10}
+local nivel1 = {limite = 100}
 
 angular = 0
 iluminacao = 0
@@ -7,36 +7,33 @@ iluminacao = 0
 jogador = {x = 200, y = 710, speed = 150, vivo = true, img = nil }
 balas = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
 inimigo = {img =nil, som = nil, maximo = 2, tempoAposCriarUltimoInimigo = 1, tempoCriacao = 1, lista = {}}
-phase = {img = nil, som = nil, x = 300, y = 8000, intervaloMaximo = 15, tempoAposUltimoTiro = 15}
 nuvem = {img = nil, y1 = -3200, y2 = -6400}
 solo = {img = nil, y1 = -3200, y2 = -6400}
 explosao = {imgs={}, lista = {}, tempoExplosao = 0.5}
 myshader = nil
 musica = {som = nil}
 
-function nivel1.inicia(arg)
-  inimigo.img = love.graphics.newImage("assets/inimigo.png")
-	inimigo.som = love.audio.newSource("assets/explosao1.ogg", "static")
+function nivel1.inicia(recursos)
+  inimigo.img = recursos.imgs.inimigo
+	inimigo.som = recursos.sons.inimigo
 	inimigo.som:setVolume(0.5)
-	jogador.img = love.graphics.newImage("assets/aviao.png")
-	jogador.som = love.audio.newSource("assets/explosao2.ogg", "static")
+	jogador.img = recursos.imgs.jogador
+	jogador.som = recursos.sons.jogador
 	jogador.som:setVolume(0.8)
-	balas.img = love.graphics.newImage("assets/bala.png")
-	balas.som = love.audio.newSource("assets/tiro.ogg", "static")
+	balas.img = recursos.imgs.balas
+	balas.som = recursos.sons.balas
 	balas.som:setVolume(0.3)
-	phase.img = love.graphics.newImage("assets/phaser.png")
-	phase.som = love.audio.newSource("assets/phase.ogg", "static")
 	jogador.som:setVolume(0.9)
-	nuvem.img = love.graphics.newImage("assets/nuvem.png")
-	solo.img = love.graphics.newImage("assets/solo.png")
+	nuvem.img = recursos.imgs.nuvem
+	solo.img = recursos.imgs.solo
 	for i = 1, 8 do
-		explosao.imgs[i] = love.graphics.newImage("assets/exp"..i..".png")
+		explosao.imgs[i] = recursos.imgs.explosao[i]
 	end
-	musica.som = love.audio.newSource("assets/musica1.ogg", "static")
+	musica.som = recursos.sons.musica1
 	musica.som:setVolume(0.1)
 	musica.som:setLooping(true)
 
-	local pixelcode = [[
+  local pixelcode = [[
 
 	extern int base;
 	vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screenCoords){
@@ -46,7 +43,7 @@ function nivel1.inicia(arg)
 	}
 	]]
 
-	myshader = love.graphics.newShader(pixelcode)
+  myshader = love.graphics.newShader(pixelcode)
 	print(myshader:getWarnings())
 	musica.som:play()
   jogador.vivo = true
@@ -61,9 +58,6 @@ function nivel1.fim()
   inimigo.lista = {}
   inimigo.tempoCriacao = 1
   inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
-  phase.intervaloMaximo = 15
-  phase.tempoAposUltimoTiro = phase.intervaloMaximo
-  phase.y = 1000
   jogador.vivo = false
   musica.som:stop()
 end
@@ -140,6 +134,27 @@ function nivel1.atualiza(dt)
 		solo.y2 = -6400
 	end
 
+  -- atualiza posicao das balas
+	for i, blTmp in ipairs(balas.lista) do
+		blTmp.y = blTmp.y - deltaTmp3
+
+		if blTmp.y < 0 then -- remove balas when they pass off the screen
+			table.remove(balas.lista, i)
+		end
+	end
+  -- atualiza posicao inimigo
+  for i, iniTmp in ipairs(inimigo.lista) do
+    iniTmp.y = iniTmp.y + deltaTmp6
+    if iniTmp.x > 400 or iniTmp.x < 0 then
+      iniTmp.delta_x = -iniTmp.delta_x
+    end
+    iniTmp.x = iniTmp.x + iniTmp.delta_x
+
+    if iniTmp.y > 850 then -- remove inimigos quando sai da tela
+      table.remove(inimigo.lista, i)
+    end
+  end
+
 	-- se estiver mosto, não atualiza o resto
 	if not jogador.vivo then
 		return pontos, false
@@ -156,53 +171,20 @@ function nivel1.atualiza(dt)
 
 	if pontos > 10 then
 		inimigo.tempoCriacao = 1
-		phase.intervaloMaximo = 13
-		if pontos < 200 then
+		if pontos < 50 then
 			inimigo.tempoCriacao = 0.9
-			phase.intervaloMaximo = 12
 			balas.tempoRecarga = 0.45
-		elseif pontos < 500 then
-			inimigo.tempoCriacao = 0.7
-			phase.intervaloMaximo = 10
-			balas.tempoRecarga = 0.40
-		elseif pontos < 1000 then
-			inimigo.tempoCriacao = 0.5
-			phase.intervaloMaximo = 7
-			balas.tempoRecarga = 0.35
-		elseif pontos < 3000 then
-			inimigo.tempoCriacao = 0.3
-			phase.intervaloMaximo = 5
-			balas.tempoRecarga = 0.30
-		elseif pontos < 5000 then
-			inimigo.tempoCriacao = 0.2
-			phase.intervaloMaximo = 4
-			balas.tempoRecarga = 0.25
 		else
-			inimigo.tempoCriacao = 0.1
-			phase.intervaloMaximo = 2
-			balas.tempoRecarga = 0.2
-		end
+			inimigo.tempoCriacao = 0.7
+			balas.tempoRecarga = 0.40
+    end
 	end
-
 
 	-- conta o tempo para as balas e os inimigos
 	balas.tempoAposUltimoTiro = balas.tempoAposUltimoTiro - deltaTmp4
 	if (balas.tempoAposUltimoTiro < 0) then
 		balas.recarregado = true
 	end
-
-	phase.tempoAposUltimoTiro = phase.tempoAposUltimoTiro - deltaTmp4
-	if phase.y > 800 and phase.tempoAposUltimoTiro < 0 then
-		-- novo tipo de phase
-		phase.y = -800
-		phase.x = math.random(10, 510)
-		phase.tempoAposUltimoTiro = phase.intervaloMaximo
-		phase.som:stop()
-		phase.som:play()
-	else
-		phase.y = phase.y + deltaTmp5
-	end
-
 
 	inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoAposCriarUltimoInimigo - deltaTmp4
 	if inimigo.tempoAposCriarUltimoInimigo < 0 then
@@ -219,30 +201,6 @@ function nivel1.atualiza(dt)
 		end
 	end
 
-
-	-- atualiza posicao das balas
-	for i, blTmp in ipairs(balas.lista) do
-		blTmp.y = blTmp.y - deltaTmp3
-
-		if blTmp.y < 0 then -- remove balas when they pass off the screen
-			table.remove(balas.lista, i)
-		end
-	end
-
-
-
-	-- atualiza posicao inimigo
-	for i, iniTmp in ipairs(inimigo.lista) do
-		iniTmp.y = iniTmp.y + deltaTmp6
-		if iniTmp.x > 400 or iniTmp.x < 0 then
-			iniTmp.delta_x = -iniTmp.delta_x
-		end
-		iniTmp.x = iniTmp.x + iniTmp.delta_x
-
-		if iniTmp.y > 850 then -- remove inimigos quando sai da tela
-			table.remove(inimigo.lista, i)
-		end
-	end
 
 	-- testa cosiloes
 	for i, iniTmp in ipairs(inimigo.lista) do
@@ -272,20 +230,14 @@ function nivel1.atualiza(dt)
 
 	end
 
-	if testaColisao(phase, jogador)
-	then
-		jogador.som:play()
-		table.insert(explosao.lista, { x = jogador.x - 80 , y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-		jogador.vivo = false
-	end
   return pontos, jogador.vivo
 end
 
 function shaderOn()
-	myshader:send("base", 800 - iluminacao)
+	myshader:send("base", 400)
 	love.graphics.setShader(myshader)
-	if iluminacao > 600 then
-		iluminacao = 600
+	if iluminacao > 400 then
+		iluminacao = 400
 	end
 end
 
@@ -296,23 +248,15 @@ end
 function nivel1.desenha(dt)
   love.graphics.setBackgroundColor( 0, 0.1, 0.3, 0.1 )
 
-	shaderOn()
-
+  shaderOn()
 
 	love.graphics.draw(solo.img, 0, solo.y1)
 	love.graphics.draw(solo.img, 0, solo.y2)
-
-	--love.graphics.draw(phase.img, phase.x, phase.y, math.rad(phase.angulo), 1, 1, 100, 100)
-
-
-
-	love.graphics.draw(phase.img, phase.x, phase.y)
 
 	love.graphics.draw(nuvem.img, 0, nuvem.y1)
 	love.graphics.draw(nuvem.img, 0, nuvem.y2)
 	love.graphics.draw(nuvem.img, 0, nuvem.y1 + 300)
 	love.graphics.draw(nuvem.img, 0, nuvem.y2 + 300)
-
 
 
 	love.graphics.setColor(1 - math.cos(angular)/2, 1 - math.sin(angular)/2, angular, 1)
@@ -328,7 +272,7 @@ function nivel1.desenha(dt)
 		iluminacao = iluminacao + 100
 	end
 
-	shadeOff()
+  shadeOff()
 
 	for i, blTmp in ipairs(balas.lista) do
 		love.graphics.draw(balas.img, blTmp.x, blTmp.y)
