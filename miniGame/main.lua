@@ -1,9 +1,8 @@
 
 -- estados
-pontos  = 0 
+pontos  = 0
 record = 0
 angular = 0
-delta_angular = 1
 iluminacao = 0
 
 -- objetos de imagens
@@ -16,6 +15,10 @@ solo = {img = nil, y1 = -3200, y2 = -6400}
 explosao = {imgs={}, lista = {}, tempoExplosao = 0.5}
 myshader = nil
 musica = {som = nil}
+cobra = {img = nil, lista = {}, xbase = 240, ybase = -1000}
+for i=1,10 do
+	table.insert(cobra.lista, {x = 0 , y = 0, viva = true})
+end
 
 
 function testaColisao(a, b)
@@ -39,10 +42,10 @@ function love.load(arg)
 	local file = io.open("data", "r")
 	if file == nil then
 		record = 0
-	else		
+	else
 		record = tonumber(file:read())
-		file:close()	
-	end	
+		file:close()
+	end
 	inimigo.img = love.graphics.newImage("assets/inimigo.png")
 	inimigo.som = love.audio.newSource("assets/explosao1.ogg", "static")
 	inimigo.som:setVolume(0.5)
@@ -63,7 +66,7 @@ function love.load(arg)
 	musica.som = love.audio.newSource("assets/musica1.ogg", "static")
 	musica.som:setVolume(0.1)
 	musica.som:setLooping(true)
-
+	cobra.img = love.graphics.newImage("assets/sphera.png")
 
 	local pixelcode = [[
 
@@ -85,13 +88,20 @@ end
 -- calcula
 function love.update(dt)
 
+
+
 	if not jogador.vivo and love.keyboard.isDown('r') then
 		-- remove balas e inimigos fora da area de jogo
 
 		jogador.x = math.random(80, love.graphics.getWidth()  - 180)
 		jogador.y = 710
 		jogador.vivo = true
+		pontos = 0
 
+	end
+
+	if love.keyboard.isDown('escape') then
+		love.event.quit(0)
 	end
 
 	if love.keyboard.isDown('left','a') then
@@ -120,7 +130,7 @@ function love.update(dt)
 		balas.tempoAposUltimoTiro = balas.tempoRecarga
 		balas.som:stop()
 		balas.som:play()
-	end	
+	end
 
 	local deltaTmp1 = 5 * dt
 	local deltaTmp2 = 15 * dt
@@ -143,6 +153,23 @@ function love.update(dt)
 		end
 	end
 
+	cobra.ybase = cobra.ybase + deltaTmp6
+	if cobra.ybase > 1400 then
+		cobra.ybase = -3000
+		for i, cblTmp in ipairs(cobra.lista) do
+				cblTmp.viva = true
+		end
+	end
+	for i, cblTmp in ipairs(cobra.lista) do
+		local a = angular + i * 0.628
+		if pontos < 40 then
+			cblTmp.x = math.sin(a) * 100
+			cblTmp.y = -40 * i
+		else
+			cblTmp.x = math.sin(a) * math.min(pontos,100)
+			cblTmp.y = math.cos(a) * math.min(pontos / 2,300)
+		end
+	end
 
 	-- move nuvens e solo
 
@@ -165,16 +192,14 @@ function love.update(dt)
 	end
 
 	-- se estiver mosto, não atualiza o resto
-	if not jogador.vivo then 
+	if not jogador.vivo then
 		return
 	end
-	
-	angular = angular + delta_angular * dt
-	if angular >  1 then
-		delta_angular = -1
-	elseif angular < 0.5 then
-		delta_angular = 1	
-	end	
+
+	angular = angular + dt
+	if angular >  3.14 then
+		angular = -3.14
+	end
 
 
 	-- atualiza dificuldade
@@ -255,7 +280,7 @@ function love.update(dt)
 		end
 	end
 
-	
+
 
 	-- atualiza posicao inimigo
 	for i, iniTmp in ipairs(inimigo.lista) do
@@ -284,6 +309,7 @@ function love.update(dt)
 			end
 		end
 
+
 		if testesSimplesDeColisao(iniTmp.x, iniTmp.y, inimigo.img:getWidth(), inimigo.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
 		then
 			jogador.som:play()
@@ -294,6 +320,33 @@ function love.update(dt)
 			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
 			endGame()
 		end
+
+	end
+
+	for i, clbBase in ipairs(cobra.lista) do
+		for j, blTmp in ipairs(balas.lista) do
+			if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), blTmp.x, blTmp.y, balas.img:getWidth(), balas.img:getHeight()) then
+				inimigo.som:stop()
+				inimigo.som:play()
+				pontos = pontos + 1
+				table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+				table.remove(balas.lista, j)
+				clbBase.viva = false
+			end
+		end
+
+
+		if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
+		then
+			jogador.som:play()
+			inimigo.som:stop()
+			inimigo.som:play()
+			table.remove(cobra.lista, i)
+			table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+			endGame()
+		end
+
 	end
 
 	if testaColisao(phase, jogador)
@@ -306,15 +359,17 @@ function love.update(dt)
 end
 
 function endGame()
-	jogador.vivo = false	
+	jogador.vivo = false
 	if record < pontos then
 		record = pontos
 	end
 
+	-- grava o record
 	file = io.open("data", "w")
 	file:write(record)
 	file:close()
 
+	-- reinicia os valores
 	balas.lista = {}
 	balas.tempoRecarga = 0.5
 	balas.tempoAposUltimoTiro = balas.tempoRecarga
@@ -324,15 +379,14 @@ function endGame()
 	phase.intervaloMaximo = 15
 	phase.tempoAposUltimoTiro = phase.intervaloMaximo
 	phase.y = 1000
-	pontos = 0
 end
 
 function shaderOn()
+	myshader:send("base", 800 - iluminacao)
 	love.graphics.setShader(myshader)
 	if iluminacao > 600 then
 		iluminacao = 600
-	end	
-	myshader:send("base", 800 - iluminacao)
+	end
 end
 
 function shadeOff()
@@ -342,10 +396,12 @@ end
 -- desenha
 function love.draw(dt)
 
-	
-	shaderOn()
-	
+
 	love.graphics.setBackgroundColor( 0, 0.1, 0.3, 0.1 )
+
+	shaderOn()
+
+
 	love.graphics.draw(solo.img, 0, solo.y1)
 	love.graphics.draw(solo.img, 0, solo.y2)
 
@@ -360,14 +416,15 @@ function love.draw(dt)
 	love.graphics.draw(nuvem.img, 0, nuvem.y1 + 300)
 	love.graphics.draw(nuvem.img, 0, nuvem.y2 + 300)
 
-	
 
-	love.graphics.setColor(angular, angular, angular, 1)
-	
+
+	love.graphics.setColor(1 - math.cos(angular)/2, 1 - math.sin(angular)/2, angular, 1)
+
 	for i, iniTmp in ipairs(inimigo.lista) do
 		love.graphics.draw(inimigo.img, iniTmp.x, iniTmp.y)
 	end
 
+	love.graphics.setColor(1, 1, 1, 1)
 	iluminacao = 0
 	for i, expTmp in ipairs(explosao.lista) do
 		love.graphics.draw(explosao.imgs[expTmp.indice], expTmp.x, expTmp.y);
@@ -375,8 +432,14 @@ function love.draw(dt)
 	end
 
 	shadeOff()
-	
-	love.graphics.setColor(1, 1, 1, 1)
+
+
+
+  for i, cblTmp in ipairs(cobra.lista) do
+		if cblTmp.viva then
+			love.graphics.draw(cobra.img, cobra.xbase + cblTmp.x, cobra.ybase + cblTmp.y)
+		end
+	end
 
 	for i, blTmp in ipairs(balas.lista) do
 		love.graphics.draw(balas.img, blTmp.x, blTmp.y)
@@ -392,15 +455,15 @@ function love.draw(dt)
 		love.graphics.draw(jogador.img, jogador.x, jogador.y)
 	else
 		love.graphics.print("Pressione 'R' para reiniciarm Esc para sair", love.graphics:getWidth()/2-140, love.graphics:getHeight()/2-10)
-		
+
 	end
 
 	--love.graphics.print("FPS:"..love.timer.getFPS(), 9, 780)
-	
+
 
 	--love.graphics.print("ANG:"..angular, 9, 780)
 
-	
-	
+
+
 
 end
