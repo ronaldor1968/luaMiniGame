@@ -54,6 +54,7 @@ function nivel2.inicia(arg)
 	myshader = love.graphics.newShader(pixelcode)
 	print(myshader:getWarnings())
 	musica.som:play()
+	jogador.vivo = true
 end
 
 function nivel2.fim()
@@ -68,18 +69,10 @@ function nivel2.fim()
   phase.tempoAposUltimoTiro = phase.intervaloMaximo
   phase.y = 1000
   jogador.vivo = false
+	musica.som:stop()
 end
 
 function nivel2.atualiza(dt)
-  if not jogador.vivo and love.keyboard.isDown('r') then
-		-- remove balas e inimigos fora da area de jogo
-
-		jogador.x = math.random(80, love.graphics.getWidth()  - 180)
-		jogador.y = 710
-		jogador.vivo = true
-		pontos = 0
-
-	end
 
 	if love.keyboard.isDown('left','a') then
 		if jogador.x > 0 then -- binds us to the map
@@ -165,7 +158,7 @@ function nivel2.atualiza(dt)
 
 	-- se estiver mosto, não atualiza o resto
 	if not jogador.vivo then
-		return
+		return pontos, false
 	end
 
 	angular = angular + dt
@@ -290,7 +283,7 @@ function nivel2.atualiza(dt)
 			table.remove(inimigo.lista, i)
 			table.insert(explosao.lista, { x = iniTmp.x - 80, y = iniTmp.y - 80, tempo = explosao.tempoExplosao, indice = 1})
 			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-			endGame()
+			jogador.vivo = false
 		end
 
 	end
@@ -316,7 +309,7 @@ function nivel2.atualiza(dt)
 			table.remove(cobra.lista, i)
 			table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
 			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-			endGame()
+			jogador.vivo = false
 		end
 
 	end
@@ -325,9 +318,9 @@ function nivel2.atualiza(dt)
 	then
 		jogador.som:play()
 		table.insert(explosao.lista, { x = jogador.x - 80 , y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-		endGame()
+		jogador.vivo = false
 	end
-  return pontos, true
+  return pontos, jogador.vivo
 end
 
 function shaderOn()
@@ -393,8 +386,6 @@ function nivel2.desenha(dt)
 
 	if jogador.vivo then
 		love.graphics.draw(jogador.img, jogador.x, jogador.y)
-	else
-		love.graphics.print("Pressione 'R' para reiniciarm Esc para sair", love.graphics:getWidth()/2-140, love.graphics:getHeight()/2-10)
 	end
 end
 

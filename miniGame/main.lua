@@ -3,6 +3,7 @@ require "utils"
 -- estados
 pontos  = 0
 record = 0
+continua = true
 
 nivel = require "nivel1"
 
@@ -29,22 +30,32 @@ function love.update(dt)
 		love.event.quit(0)
 	end
 
-	local continua = false
+	if not continua and love.keyboard.isDown('r') then
+		-- remove balas e inimigos fora da area de jogo
+
+		nivel.fim()
+		nivel = require ("nivel1")
+		nivel.inicia()
+		continua = true
+
+	end
+
 	pontos, continua = nivel.atualiza(dt)
 	if not continua then
 		endGame()
+	else
+		if pontos > nivel.limite then
+			nivel.fim()
+			nivel = require "nivel2"
+			nivel.inicia()
+		end
 	end
-	if pontos > nivel.limite then
-		nivel.fim()
-		nivel = require "nivel2"
-		nivel.inicia()
-	end
-
 end
 
 
 
 function endGame()
+
 	if record < pontos then
 		record = pontos
 	end
@@ -53,7 +64,6 @@ function endGame()
 	file = io.open("data", "w")
 	file:write(record)
 	file:close()
-	nivel.fim()
 
 end
 
@@ -67,6 +77,10 @@ function love.draw(dt)
 		love.graphics.print("record: " .. tostring(record), 0, 10)
 	end
 	love.graphics.print("pontos: " .. tostring(pontos), 400, 10)
+
+	if not continua then
+		love.graphics.print("Pressione 'R' para reiniciarm Esc para sair", love.graphics:getWidth()/2-140, love.graphics:getHeight()/2-10)
+	end
 
 	--love.graphics.print("FPS:"..love.timer.getFPS(), 9, 780)
 
