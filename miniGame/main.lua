@@ -8,6 +8,7 @@ local continua = true
 local numeroNivel = 1
 local tempoMostraImagem = 2
 local imagem = nil
+local posimagem = {x = 20, y = 100}
 
 local nivel = require ("nivel" .. numeroNivel)
 
@@ -16,6 +17,7 @@ local recursos = {
 		nivel1 = love.graphics.newImage("assets/nivel1.png"),
 		nivel2 = love.graphics.newImage("assets/nivel2.png"),
 		nivel3 = love.graphics.newImage("assets/nivel3.png"),
+		fimjogo = love.graphics.newImage("assets/gameover.png"),
 		inimigo = love.graphics.newImage("assets/inimigo.png"),
 		jogador = love.graphics.newImage("assets/aviao.png"),
 		balas = love.graphics.newImage("assets/bala.png"),
@@ -104,6 +106,8 @@ function love.update(dt)
 			continua = true
 		end
 	end
+	posimagem.x = 20 + 20 * math.cos(tempoMostraImagem)
+	posimagem.y = 100 + 50 * math.sin(tempoMostraImagem)
 end
 
 
@@ -118,13 +122,13 @@ function endGame()
 	file = io.open("data", "w")
 	file:write(record)
 	file:close()
-
+	imagem = recursos.imgs.fimjogo
 end
 
 -- desenha
-function love.draw(dt)
+function love.draw()
 
-	nivel.desenha(dt)
+	nivel.desenha()
 
 	love.graphics.setColor(255, 255, 255)
 	if record > 0 then
@@ -138,7 +142,7 @@ function love.draw(dt)
 
 
 	if imagem ~= nil then
-		love.graphics.draw(imagem, 20, 100)
+		love.graphics.draw(imagem, posimagem.x, posimagem.y)
 	end
 
 	--love.graphics.print("FPS:"..love.timer.getFPS(), 9, 780)

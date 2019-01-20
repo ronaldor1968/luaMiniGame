@@ -151,7 +151,7 @@ function shadeOff()
 	love.graphics.setShader()
 end
 
-function nivel2.desenha(dt)
+function nivel2.desenha()
   love.graphics.setBackgroundColor( 0, 0.1, 0.3, 0.1 )
 
 	shaderOn()
