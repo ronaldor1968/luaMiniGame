@@ -1,4 +1,4 @@
-local nivel2 = {limite = 100}
+local nivel2 = {limite = 200}
 
 local angular = 0
 local iluminacao = 0
