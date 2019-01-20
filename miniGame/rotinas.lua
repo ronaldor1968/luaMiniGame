@@ -4,15 +4,18 @@ function movejogador(...)
 		if jogador.x > 0 then -- binds us to the map
 			jogador.x = jogador.x - (jogador.speed*dt)
 		end
-	elseif love.keyboard.isDown('right','d') then
+	end
+  if love.keyboard.isDown('right','d') then
 		if jogador.x < (love.graphics.getWidth() - jogador.img:getWidth()) then
 			jogador.x = jogador.x + (jogador.speed*dt)
 		end
-	elseif love.keyboard.isDown('up','w') then
+	end
+  if love.keyboard.isDown('up','w') then
 		if jogador.y > 0 then
 			jogador.y = jogador.y - (jogador.speed*dt)
 		end
-	elseif love.keyboard.isDown('down','s') then
+  end
+	if love.keyboard.isDown('down','s') then
 		if jogador.y < 710  then
 			jogador.y = jogador.y + (jogador.speed*dt)
 		end
@@ -204,7 +207,6 @@ function colisaobalainimigo3jogador(...)
 				clbBase.viva = false
 			end
 		end
-
 
 		if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
 		then
