@@ -139,20 +139,23 @@ function nivel1.desenha()
 
 	love.graphics.setColor(1 - math.cos(angular)/2, 1 - math.sin(angular)/2, angular, 1)
 
-	for i, iniTmp in ipairs(inimigo.lista) do
-		love.graphics.draw(inimigo.img, iniTmp.x, iniTmp.y)
+
+	for i, iniTmp in pairs(inimigo.lista) do
+    local w = inimigo.img:getWidth() / 2
+    local h = inimigo.img:getHeight() / 2
+		love.graphics.draw(inimigo.img, iniTmp.x + w, iniTmp.y + h, iniTmp.s * angular, 1, 1, w, h)
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
 	iluminacao = 0
-	for i, expTmp in ipairs(explosao.lista) do
+	for i, expTmp in pairs(explosao.lista) do
 		love.graphics.draw(explosao.imgs[expTmp.indice], expTmp.x, expTmp.y);
 		iluminacao = iluminacao + 100
 	end
 
   shadeOff()
 
-	for i, blTmp in ipairs(balas.lista) do
+	for i, blTmp in pairs(balas.lista) do
 		love.graphics.draw(balas.img, blTmp.x, blTmp.y)
 	end
 

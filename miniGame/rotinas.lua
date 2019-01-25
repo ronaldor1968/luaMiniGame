@@ -33,7 +33,7 @@ function dispara(...)
 	end
 
   -- atualiza posicao das balas
-	for i, blTmp in ipairs(balas.lista) do
+	for i, blTmp in pairs(balas.lista) do
 		blTmp.y = blTmp.y - deltaSpeed
 
 		if blTmp.y < 0 then -- remove balas when they pass off the screen
@@ -50,7 +50,7 @@ end
 
 function atualizaexplosoes(...)
   local dt, explosao, deltaTempo, deltaSpeed = ...
-  for i, expTmp in ipairs(explosao.lista) do
+  for i, expTmp in pairs(explosao.lista) do
 		expTmp.tempo = expTmp.tempo  -  deltaTempo
 		expTmp.y = expTmp.y + deltaSpeed
 		if (expTmp.tempo < 0) then
@@ -89,7 +89,7 @@ end
 function atualizainimigos1(...)
   local dt, pontos, inimigo, deltaSpeed, deltaTempo = ...
   -- atualiza posicao inimigo
-  for i, iniTmp in ipairs(inimigo.lista) do
+  for i, iniTmp in pairs(inimigo.lista) do
     iniTmp.y = iniTmp.y + deltaSpeed
     if iniTmp.x > 400 or iniTmp.x < 0 then
       iniTmp.delta_x = -iniTmp.delta_x
@@ -112,7 +112,7 @@ function atualizainimigos1(...)
 			elseif dx < -100 then
 				dx = -100
 			end
-			table.insert(inimigo.lista, { x = math.random(10, love.graphics.getWidth()  - 80), y = -30, delta_x = dx * dt})
+			table.insert(inimigo.lista, { x = math.random(10, love.graphics.getWidth()  - 80), y = -30, delta_x = dx * dt, s = math.random(-2, 2)})
 		end
 	end
 end
@@ -137,11 +137,11 @@ function atualizainimigos3(...)
   cobra.ybase = cobra.ybase + deltaSpeed
 	if cobra.ybase > 1400 then
 		cobra.ybase = -3000
-		for i, cblTmp in ipairs(cobra.lista) do
+		for i, cblTmp in pairs(cobra.lista) do
 				cblTmp.viva = true
 		end
 	end
-	for i, cblTmp in ipairs(cobra.lista) do
+	for i, cblTmp in pairs(cobra.lista) do
 		local a = angular + i * 0.628 * math.max(pontos,100) / 100
 			cblTmp.x = math.sin(a) * 100
 			cblTmp.y = -40 * i
@@ -151,8 +151,8 @@ end
 function colisaobalainimigojogador(...)
   local dt, balas, inimigo, jogador, explosao = ...
   local deltapontos = 0
-  for i, iniTmp in ipairs(inimigo.lista) do
-		for j, blTmp in ipairs(balas.lista) do
+  for i, iniTmp in pairs(inimigo.lista) do
+		for j, blTmp in pairs(balas.lista) do
 			if testesSimplesDeColisao(iniTmp.x, iniTmp.y, inimigo.img:getWidth(), inimigo.img:getHeight(), blTmp.x, blTmp.y, balas.img:getWidth(), balas.img:getHeight()) then
 				inimigo.maximo = 2 + pontos / 10
 				inimigo.som:stop()
@@ -193,8 +193,8 @@ end
 function colisaobalainimigo3jogador(...)
   local dt, balas, cobra, jogador, explosao = ...
   local deltapontos = 0
-  for i, clbBase in ipairs(cobra.lista) do
-		for j, blTmp in ipairs(balas.lista) do
+  for i, clbBase in pairs(cobra.lista) do
+		for j, blTmp in pairs(balas.lista) do
 			if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), blTmp.x, blTmp.y, balas.img:getWidth(), balas.img:getHeight()) then
 				cobra.som:stop()
 				cobra.som:play()

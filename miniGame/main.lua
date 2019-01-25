@@ -24,6 +24,8 @@ local recursos = {
 		phase = love.graphics.newImage("assets/phaser.png"),
 		nuvem = love.graphics.newImage("assets/nuvem.png"),
 		solo = love.graphics.newImage("assets/solo.png"),
+		espaco1 = love.graphics.newImage("assets/espaço1.png"),
+		espaco2 = love.graphics.newImage("assets/espaço2.png"),
 		cobra = love.graphics.newImage("assets/sphera.png"),
 		explosao = {nil,nil,nil,nil,nil,nil,nil,nil}
 	},
