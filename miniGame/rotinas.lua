@@ -145,18 +145,41 @@ function atualizainimigos3(...)
 		end
 	end
 	for i, cblTmp in pairs(cobra.lista) do
-		local a = angular + i * 0.628 * math.max(pontos,100) / 100
-			cblTmp.x = math.sin(a) * 100
-			cblTmp.y = -40 * i
+		local a = angular + i * 0.628
+		cblTmp.x = math.sin(a) * 100
+		cblTmp.y = -40 * i
+	end
+end
+
+function atualizainimigos4(...)
+  local dt, angular, pontos, prato, deltaSpeed = ...
+  prato.ybase = prato.ybase + deltaSpeed
+	if prato.ybase > 1400 then
+		prato.ybase = -3000
+		for i, cblTmp in pairs(prato.lista) do
+				cblTmp.viva = true
+		end
+	end
+	for i, cblTmp in pairs(prato.lista) do
+		local a = angular + i * 0.628 * 4
+		cblTmp.x = math.sin(a) * 100
+		cblTmp.y = -40 * i
 	end
 end
 
 function colisaobalainimigojogador(...)
   local dt, balas, inimigo, jogador, explosao = ...
   local deltapontos = 0
+  local tolerancia = 1
+  local w1 = inimigo.img:getWidth()
+  local h1 = inimigo.img:getHeight()
+  local w2 = balas.img:getWidth()
+  local h2 = balas.img:getHeight()
+  local w3 = jogador.img:getWidth() * tolerancia
+  local h3 = jogador.img:getHeight() * tolerancia
   for i, iniTmp in pairs(inimigo.lista) do
 		for j, blTmp in pairs(balas.lista) do
-			if testesSimplesDeColisao(iniTmp.x, iniTmp.y, inimigo.img:getWidth(), inimigo.img:getHeight(), blTmp.x, blTmp.y, balas.img:getWidth(), balas.img:getHeight()) then
+			if testesSimplesDeColisao(iniTmp.x, iniTmp.y, w1, h1, blTmp.x, blTmp.y, w2, h2) then
 				inimigo.maximo = 2 + pontos / 10
 				inimigo.som:stop()
 				inimigo.som:play()
@@ -168,7 +191,7 @@ function colisaobalainimigojogador(...)
 		end
 
 
-		if testesSimplesDeColisao(iniTmp.x, iniTmp.y, inimigo.img:getWidth(), inimigo.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
+		if testesSimplesDeColisao(iniTmp.x, iniTmp.y, w1, h1, jogador.x, jogador.y, w3, h3)
 		then
 			jogador.som:play()
 			inimigo.som:stop()
@@ -196,29 +219,75 @@ end
 function colisaobalainimigo3jogador(...)
   local dt, balas, cobra, jogador, explosao = ...
   local deltapontos = 0
+  local tolerancia = 1
+  local w1 = cobra.img:getWidth()
+  local h1 = cobra.img:getHeight()
+  local w2 = balas.img:getWidth()
+  local h2 = balas.img:getHeight()
+  local w3 = jogador.img:getWidth() * tolerancia
+  local h3 = jogador.img:getHeight() * tolerancia
   for i, clbBase in pairs(cobra.lista) do
-		for j, blTmp in pairs(balas.lista) do
-			if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), blTmp.x, blTmp.y, balas.img:getWidth(), balas.img:getHeight()) then
-				cobra.som:stop()
-				cobra.som:play()
-				deltapontos = deltapontos + 1
-				table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-				table.remove(balas.lista, j)
-				clbBase.viva = false
-			end
-		end
+    if clbBase.viva then
+      for j, blTmp in pairs(balas.lista) do
+  			if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, w1, h1, blTmp.x, blTmp.y, w2, h2) then
+  				cobra.som:stop()
+  				cobra.som:play()
+  				deltapontos = deltapontos + 1
+  				table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+  				table.remove(balas.lista, j)
+  				clbBase.viva = false
+  			end
+  		end
 
-		if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, cobra.img:getWidth(), cobra.img:getHeight(), jogador.x, jogador.y, jogador.img:getWidth(), jogador.img:getHeight())
-		then
-			jogador.som:play()
-			cobra.som:stop()
-			cobra.som:play()
-			table.remove(cobra.lista, i)
-			table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
-			jogador.vivo = false
-		end
+  		if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, w1, h1, jogador.x, jogador.y, w3, h3)
+  		then
+  			jogador.som:play()
+  			cobra.som:stop()
+  			cobra.som:play()
+  			table.remove(cobra.lista, i)
+  			table.insert(explosao.lista, { x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+  			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+  			jogador.vivo = false
+  		end
+    end
+	end
+  return deltapontos
+end
 
+function colisaobalainimigo4jogador(...)
+  local dt, balas, prato, jogador, explosao = ...
+  local deltapontos = 0
+  local tolerancia = 1
+  local w1 = prato.img:getWidth()
+  local h1 = prato.img:getHeight()
+  local w2 = balas.img:getWidth()
+  local h2 = balas.img:getHeight()
+  local w3 = jogador.img:getWidth() * tolerancia
+  local h3 = jogador.img:getHeight() * tolerancia
+  for i, clbBase in pairs(prato.lista) do
+    if clbBase.viva then
+      for j, blTmp in pairs(balas.lista) do
+  			if testesSimplesDeColisao(prato.xbase + clbBase.x, prato.ybase + clbBase.y, w1, h1, blTmp.x, blTmp.y, w2, h2) then
+  				prato.som:stop()
+  				prato.som:play()
+  				deltapontos = deltapontos + 1
+  				table.insert(explosao.lista, { x = prato.xbase + clbBase.x - 80, y = prato.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+  				table.remove(balas.lista, j)
+  				clbBase.viva = false
+  			end
+  		end
+
+  		if testesSimplesDeColisao(prato.xbase + clbBase.x, prato.ybase + clbBase.y, w1, h1, jogador.x, jogador.y, w3, h3)
+  		then
+  			jogador.som:play()
+  			prato.som:stop()
+  			prato.som:play()
+  			table.remove(prato.lista, i)
+  			table.insert(explosao.lista, { x = prato.xbase + clbBase.x - 80, y = prato.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+  			table.insert(explosao.lista, { x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
+  			jogador.vivo = false
+  		end
+    end
 	end
   return deltapontos
 end

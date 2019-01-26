@@ -17,6 +17,8 @@ local musica = {som = nil}
 function nivel2.inicia(recursos)
   inimigo.img = recursos.imgs.inimigo
 	inimigo.som = recursos.sons.inimigo
+  inimigo.hw = inimigo.img:getWidth() / 2
+	inimigo.hh = inimigo.img:getWidth() / 2
 	inimigo.som:setVolume(0.5)
 	jogador.img = recursos.imgs.jogador
 	jogador.som = recursos.sons.jogador
@@ -176,7 +178,7 @@ function nivel2.desenha()
 	love.graphics.setColor(1 - math.cos(angular)/2, 1 - math.sin(angular)/2, angular, 1)
 
 	for i, iniTmp in pairs(inimigo.lista) do
-		love.graphics.draw(inimigo.img, iniTmp.x + w, iniTmp.y + h, iniTmp.s * angular, 1, 1, w, h)
+		love.graphics.draw(inimigo.img, iniTmp.x + inimigo.hw, iniTmp.y + inimigo.hh, iniTmp.s * angular, 1, 1, inimigo.hw, inimigo.hh)
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
