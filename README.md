@@ -9,4 +9,4 @@ de fazer jogos simples em love2d com lua.
 
 Foi implementado somente com objetivo didático para sair da rotina de trabalhos mais sérios.
 
-Todas as imágens e sons foram implemeentados por mim e pelo meu filho Pedro, de 9 anos. O avião, disco voador foram primeiramente desenhados em openscad, depois renderizados em blender. As explosões foram criadas com base em gravação de voz no microfone, com efeitos e modificações efetuadas em audacity. As outras imagens foram criadas utilizando o gimp. A música de abertura e do boss foram feitas por mim, a música do jogo foi feita pelo Pedro.
+Todas as imágens e sons foram implemeentados por mim e pelo meu filho Pedro, de 9 anos. O avião, disco voador foram primeiramente desenhados em openscad, depois renderizados em blender. As explosões foram criadas com base em gravação de voz no microfone, com efeitos e modificações efetuadas em audacity. As outras imagens foram criadas utilizando o gimp. A música de abertura e do boss foram feitas por mim, a música do jogo foi feita pelo Pedro. Para as músicas foi utilizado um piano digital conectado ao sintetizador yoshimi, gravado diretamente no audacity.
