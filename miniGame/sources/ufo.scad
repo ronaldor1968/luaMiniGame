@@ -25,8 +25,8 @@ module ufo() {
     color("magenta") luzes();
 }
 
-//ufo();
+ufo();
 
 //corpo();
 //cupula(); 
-luzes();
+//luzes();

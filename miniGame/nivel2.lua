@@ -1,11 +1,11 @@
-local nivel2 = {limite = 200}
-
+local nivel2 = {}
+local limiteNivel = 200
 local angular = 0
 local iluminacao = 0
 
 -- objetos de imagens
 local jogador = {x = 200, y = 710, speed = 150, vivo = true, img = nil }
-local balas = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
+local balas = {img =nil, som = nil, tempoRecarga = 0.2, tempoAposUltimoTiro = 0.2, recarregado = true, lista = {}}
 local inimigo = {img =nil, som = nil, maximo = 2, tempoAposCriarUltimoInimigo = 1, tempoCriacao = 1, lista = {}}
 local phase = {img = nil, som = nil, x = 300, y = 8000, intervaloMaximo = 15, tempoAposUltimoTiro = 15}
 local nuvem = {img = nil, y1 = -3200, y2 = -6400}
@@ -13,6 +13,9 @@ local solo = {img = nil, y1 = -3200, y2 = -6400}
 local explosao = {imgs={}, lista = {}, tempoExplosao = 0.5}
 local myshader = nil
 local musica = {som = nil}
+
+local boss = {x = -60, y = -600, danos = 0, limitedanos = 100, iniciado = false, retirado = false, ativo = false, retirada = false, pontosativo = 200, pontosretirada = 40}
+local balasboss = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
 
 function nivel2.inicia(recursos)
   inimigo.img = recursos.imgs.inimigo
@@ -88,6 +91,8 @@ function nivel2.atualiza(dt)
   atualizainimigos1(dt, pontos, inimigo, deltaTmp6, deltaTmp4)
   atualizainimigos2(dt, phase, deltaTmp4, deltaTmp5)
 
+  atualizaboss1(dt, pontos, boss, 20, deltaTmp6)
+
 	-- se estiver mosto, não atualiza o resto
 	if not jogador.vivo then
 		return pontos, false
@@ -109,27 +114,23 @@ function nivel2.atualiza(dt)
 		if pontos < 200 then
 			inimigo.tempoCriacao = 0.9
 			phase.intervaloMaximo = 12
-			balas.tempoRecarga = 0.45
+			balas.tempoRecarga = 0.15
 		elseif pontos < 500 then
 			inimigo.tempoCriacao = 0.7
 			phase.intervaloMaximo = 10
-			balas.tempoRecarga = 0.40
+			balas.tempoRecarga = 0.1
 		elseif pontos < 1000 then
 			inimigo.tempoCriacao = 0.5
 			phase.intervaloMaximo = 7
-			balas.tempoRecarga = 0.35
 		elseif pontos < 3000 then
 			inimigo.tempoCriacao = 0.3
 			phase.intervaloMaximo = 5
-			balas.tempoRecarga = 0.30
 		elseif pontos < 5000 then
 			inimigo.tempoCriacao = 0.2
 			phase.intervaloMaximo = 4
-			balas.tempoRecarga = 0.25
 		else
 			inimigo.tempoCriacao = 0.1
 			phase.intervaloMaximo = 2
-			balas.tempoRecarga = 0.2
 		end
 	end
 
@@ -138,7 +139,7 @@ function nivel2.atualiza(dt)
 
   colisaoinimigo2jogador(dt, phase, jogador, explosao)
 
-  return pontos, jogador.vivo
+  return pontos, jogador.vivo, not boss.retirado
 end
 
 function shaderOn()
@@ -197,6 +198,10 @@ function nivel2.desenha()
   if jogador.vivo then
 		love.graphics.draw(jogador.img, jogador.x, jogador.y)
 	end
+
+  if boss.ativo then
+    love.graphics.draw(boss.img, boss.x + boss.hw, boss.y + boss.hh, angular, 1, 1, boss.hw, boss.hh)
+  end
 
 end
 

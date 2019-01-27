@@ -1,4 +1,5 @@
 debug_rect = {}
+debug_text = {}
 
 
 function testaColisao(a, b)
@@ -20,4 +21,8 @@ end
 function debugrect(px1, py1, pw1, ph1, px2, py2, pw2, ph2)
 	table.insert(debug_rect, {x = px1, y = py1, w = pw1, h = ph1})
 	table.insert(debug_rect, {x = px2, y = py2, w = pw2, h = ph2})
+end
+
+function debugtext(text)
+	table.insert(debug_text, text)
 end

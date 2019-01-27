@@ -10,6 +10,7 @@ local tempoMostraImagem = 2
 local imagem = nil
 local posimagem = {x = 20, y = 100}
 local primeiravez = true
+local finalizado = false
 
 local nivel = require ("nivel" .. numeroNivel)
 
@@ -31,8 +32,7 @@ local recursos = {
 		phase = love.graphics.newImage("assets/phaser.png"),
 		nuvem = love.graphics.newImage("assets/nuvem.png"),
 		solo = love.graphics.newImage("assets/solo.png"),
-		espaco1 = love.graphics.newImage("assets/espaço1.png"),
-		espaco2 = love.graphics.newImage("assets/espaço2.png"),
+		boss1 = love.graphics.newImage("assets/boss1.png"),
 		cobra = love.graphics.newImage("assets/sphera.png"),
 		prato = love.graphics.newImage("assets/prato.png"),
 		explosao = {nil,nil,nil,nil,nil,nil,nil,nil}
@@ -73,7 +73,6 @@ function love.update(dt)
 		love.event.quit(0)
 	end
 
-
 	if not continua and love.keyboard.isDown('r') then
 		-- remove balas e inimigos fora da area de jogo
 		nivel.fim()
@@ -83,6 +82,7 @@ function love.update(dt)
 		tempoMostraImagem = 2
 		imagem = recursos.imgs.nivel1
 		continua = true
+		finalizado = false
 	end
 
 	if primeiravez then
@@ -91,22 +91,25 @@ function love.update(dt)
 			tempoMostraImagem = 2
 			primeiravez = false
 			continua = true
+			finalizado = false
 		end
 		return
 	end
 
-	if imagem ~= nil then
+	if imagem ~= nil and continua then
 		tempoMostraImagem = tempoMostraImagem - dt;
 		if tempoMostraImagem < 0 then
 			imagem = nil
 		end
 	end
 
-	pontos, continua = nivel.atualiza(dt)
+	pontos, continua, fimnivel = nivel.atualiza(dt)
 	if not continua then
-		endGame()
+		if not finalizado then
+			endGame()
+		end
 	else
-		if pontos > nivel.limite then
+		if not fimnivel then
 			local antigoNivel = numeroNivel
 			numeroNivel = math.min(numeroNivel + 1, 4)
 			if numeroNivel ~= antigoNivel then
@@ -132,7 +135,6 @@ function love.update(dt)
 end
 
 
-
 function endGame()
 
 	if record < pontos then
@@ -143,7 +145,9 @@ function endGame()
 	file = io.open("data", "w")
 	file:write(record)
 	file:close()
+	tempoMostraImagem = 2
 	imagem = recursos.imgs.fimjogo
+	finalizado = true
 end
 
 -- desenha
@@ -153,7 +157,6 @@ function love.draw()
 		nivel.desenha()
 	end
 
-
 	if record > 0 then
 		love.graphics.print("record: " .. tostring(record), 0, 10)
 	end
@@ -161,7 +164,7 @@ function love.draw()
 
 	if primeiravez then
 		love.graphics.setBackgroundColor(0.1, 0.1,  0.1, 1)
-		love.graphics.draw(recursos.imgs.titulo, 30, 350)
+		love.graphics.draw(recursos.imgs.titulo, 30, 250)
 		love.graphics.draw(recursos.imgs.texto1, -10, 650)
 		love.graphics.draw(recursos.imgs.texto3, -10, 700)
 		return
@@ -182,6 +185,13 @@ function love.draw()
 		love.graphics.rectangle("line", j.x, j.y, j.w, j.h)
 		table.remove(debug_rect, i)
 	end
+
+	love.graphics.setColor(1,0,0,1)
+	for i, j in pairs(debug_text) do
+		love.graphics.print(j, 10, 600 + i * 10)
+		table.remove(debug_text, i)
+	end
+	love.graphics.setColor(1,1,1,1)
 
 	--love.graphics.print("FPS:"..love.timer.getFPS(), 9, 780)
 

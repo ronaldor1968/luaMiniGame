@@ -25,15 +25,22 @@ end
 
 function dispara(...)
   local dt, jogador, balas, deltaSpeed, deltaRecarga = ...
-  if jogador.vivo and love.keyboard.isDown('space', 'rctrl', 'lctrl') and balas.recarregado then
-		-- cria balas
-		newBullet = { x = jogador.x + (jogador.img:getWidth() - balas.img:getWidth())/2, y = jogador.y }
-		table.insert(balas.lista, newBullet)
-		balas.recarregado = false
-		balas.tempoAposUltimoTiro = balas.tempoRecarga
-		balas.som:stop()
-		balas.som:play()
-	end
+  if love.keyboard.isDown('space', 'rctrl', 'lctrl') then
+    if jogador.vivo and balas.recarregado then
+  		-- cria balas
+  		newBullet = { x = jogador.x + (jogador.img:getWidth() - balas.img:getWidth())/2, y = jogador.y }
+  		table.insert(balas.lista, newBullet)
+  		balas.recarregado = false
+  		balas.tempoAposUltimoTiro = balas.tempoRecarga
+  		balas.som:stop()
+  		balas.som:play()
+  	end
+  else
+    balas.tempoAposUltimoTiro = balas.tempoAposUltimoTiro - deltaRecarga
+  	if (balas.tempoAposUltimoTiro < 0) then
+  		balas.recarregado = true
+  	end
+  end
 
   -- atualiza posicao das balas
 	for i, blTmp in pairs(balas.lista) do
@@ -45,10 +52,7 @@ function dispara(...)
 	end
 
   -- conta o tempo para as balas e os inimigos
-	balas.tempoAposUltimoTiro = balas.tempoAposUltimoTiro - deltaRecarga
-	if (balas.tempoAposUltimoTiro < 0) then
-		balas.recarregado = true
-	end
+
 end
 
 function atualizaexplosoes(...)
@@ -155,7 +159,7 @@ function atualizainimigos4(...)
   local dt, angular, pontos, prato, deltaSpeed = ...
   prato.ybase = prato.ybase + deltaSpeed
 	if prato.ybase > 1400 then
-		prato.ybase = -3000
+		prato.ybase = -2000
 		for i, cblTmp in pairs(prato.lista) do
 				cblTmp.viva = true
 		end
@@ -165,6 +169,33 @@ function atualizainimigos4(...)
 		cblTmp.x = math.sin(a) * 100
 		cblTmp.y = -40 * i
 	end
+end
+
+function atualizaboss1(...)
+  local dt, pontos, boss, pontosboss, speed = ...
+
+  if boss.ativo then
+    if not boss.iniciado then
+      if boss.y < -200 then
+        boss.y = boss.y + speed
+      else
+        boss.iniciado = true
+        boss.pontosretirada = pontos + pontosboss
+      end
+    else
+      if not boss.retirada then
+        boss.retirada = (pontos > boss.pontosretirada)
+      else
+        if boss.y > -700 then
+          boss.y = boss.y - speed
+        else
+          boss.retirado = true
+        end
+      end
+    end
+  else
+    boss.ativo = (pontos > boss.pontosativo)
+  end
 end
 
 function colisaobalainimigojogador(...)

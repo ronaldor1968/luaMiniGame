@@ -1,17 +1,20 @@
-local nivel1 = {limite = 100}
-
+local nivel1 = {}
+local limiteNivel = 100
 local angular = 0
 local iluminacao = 0
 
 -- objetos de imagens
 local jogador = {x = 200, y = 710, speed = 150, vivo = true, img = nil }
-local balas = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
+local balas = {img =nil, som = nil, tempoRecarga = 0.2, tempoAposUltimoTiro = 0.2, recarregado = true, lista = {}}
 local inimigo = {img =nil, som = nil, maximo = 2, tempoAposCriarUltimoInimigo = 1, tempoCriacao = 1, lista = {}}
 local nuvem = {img = nil, y1 = -3200, y2 = -6400}
 local solo = {img = nil, y1 = -3200, y2 = -6400}
 local explosao = {imgs={}, lista = {}, tempoExplosao = 0.5}
 local myshader = nil
 local musica = {som = nil}
+
+local boss = {x = -60, y = -600, danos = 0, limitedanos = 100, iniciado = false, retirado = false, ativo = false, retirada = false, pontosativo = 100, pontosretirada = 40}
+local balasboss = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
 
 function nivel1.inicia(recursos)
   inimigo.img = recursos.imgs.inimigo
@@ -34,6 +37,11 @@ function nivel1.inicia(recursos)
 	musica.som = recursos.sons.musica1
 	musica.som:setVolume(0.1)
 	musica.som:setLooping(true)
+
+  boss.img = recursos.imgs.boss1
+  boss.hw = boss.img:getWidth() / 2
+	boss.hh = boss.img:getWidth() / 2
+  boss.som = recursos.sons.jogador
 
   local pixelcode = [[
 
@@ -60,6 +68,12 @@ function nivel1.fim()
   inimigo.lista = {}
   inimigo.tempoCriacao = 1
   inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
+
+  boss.y = -700
+  boss.iniciado = false
+  boss.retirado = false
+  local bossativo = false
+  local bossretirada = false
   jogador.vivo = false
   musica.som:stop()
 end
@@ -74,6 +88,8 @@ function nivel1.atualiza(dt)
 	local deltaTmp6 = 200 * dt
 	local deltaTmp7 = 30 * dt;
 
+  --if pontos > bossl
+
   movejogador(dt, jogador)
   dispara(dt, jogador, balas, deltaTmp3, deltaTmp4)
 	atualizaexplosoes(dt, explosao, deltaTmp1, deltaTmp2)
@@ -81,6 +97,10 @@ function nivel1.atualiza(dt)
   movenuvenssolo(dt, nuvem, solo, deltaTmp3, deltaTmp7)
   -- atualiza posicao inimigo
   atualizainimigos1(dt, pontos, inimigo, deltaTmp6, deltaTmp4)
+
+  atualizaboss1(dt, pontos, boss, 20, deltaTmp6)
+
+
 
 	-- se estiver mosto, não atualiza o resto
 	if not jogador.vivo then
@@ -98,10 +118,10 @@ function nivel1.atualiza(dt)
 		inimigo.tempoCriacao = 1
 		if pontos < 50 then
 			inimigo.tempoCriacao = 0.9
-			balas.tempoRecarga = 0.45
+			balas.tempoRecarga = 0.15
 		else
 			inimigo.tempoCriacao = 0.7
-			balas.tempoRecarga = 0.40
+			balas.tempoRecarga = 0.1
     end
 	end
 
@@ -110,7 +130,7 @@ function nivel1.atualiza(dt)
 	-- testa cosiloes
   pontos = pontos + colisaobalainimigojogador(dt, balas, inimigo, jogador, explosao)
 
-  return pontos, jogador.vivo
+  return pontos, jogador.vivo, not boss.retirado
 end
 
 function shaderOn()
@@ -162,6 +182,10 @@ function nivel1.desenha()
   if jogador.vivo then
 		love.graphics.draw(jogador.img, jogador.x, jogador.y)
 	end
+
+  if boss.ativo then
+    love.graphics.draw(boss.img, boss.x + boss.hw, boss.y + boss.hh, angular, 1, 1, boss.hw, boss.hh)
+  end
 
 end
 
