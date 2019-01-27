@@ -18,7 +18,7 @@ for i=1,10 do
 	table.insert(prato.lista, {x = 0 , y = 0, viva = true})
 end
 
-local boss = {x = -60, y = -600, danos = 0, limitedanos = 100, iniciado = false, retirado = false, ativo = false, retirada = false, pontosativo = 100, pontosretirada = 40}
+local boss = {x = -60, y = -600, danos = 0, limitedanos = 100, iniciado = false, retirado = false, ativo = false, retirada = false, pontosativo = 600, pontosretirada = 400}
 local balasboss = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
 
 function nivel4.inicia(recursos)
@@ -65,18 +65,11 @@ end
 
 function nivel4.fim()
   -- reinicia os valores
-  balas.lista = {}
-  balas.tempoRecarga = 0.5
-  balas.tempoAposUltimoTiro = balas.tempoRecarga
-  inimigo.lista = {}
-  inimigo.tempoCriacao = 1
-  inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
-  phase.intervaloMaximo = 15
-  phase.tempoAposUltimoTiro = phase.intervaloMaximo
-  phase.y = 1000
-	prato.ybase = -1000
-  jogador.vivo = false
-	musica.som:stop()
+	reinicializa1(balas, inimigo, boss, jogador)
+	reinicializa2(phase)
+	reinicializa3(prato)
+	boss.pontosativo = boss.pontosativo + 1000
+
 end
 
 function nivel4.atualiza(dt)

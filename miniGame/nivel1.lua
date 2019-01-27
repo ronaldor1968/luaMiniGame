@@ -41,7 +41,9 @@ function nivel1.inicia(recursos)
   boss.img = recursos.imgs.boss1
   boss.hw = boss.img:getWidth() / 2
 	boss.hh = boss.img:getWidth() / 2
-  boss.som = recursos.sons.jogador
+  boss.som = recursos.sons.musica2
+  boss.som:setVolume(0.3)
+  boss.som:setLooping(true)
 
   local pixelcode = [[
 
@@ -62,20 +64,7 @@ end
 
 function nivel1.fim()
   -- reinicia os valores
-  balas.lista = {}
-  balas.tempoRecarga = 0.5
-  balas.tempoAposUltimoTiro = balas.tempoRecarga
-  inimigo.lista = {}
-  inimigo.tempoCriacao = 1
-  inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
-
-  boss.y = -700
-  boss.iniciado = false
-  boss.retirado = false
-  local bossativo = false
-  local bossretirada = false
-  jogador.vivo = false
-  musica.som:stop()
+  reinicializa1(balas, inimigo, boss, jogador)
 end
 
 function nivel1.atualiza(dt)

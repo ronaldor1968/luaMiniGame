@@ -43,7 +43,9 @@ local recursos = {
 		jogador = love.audio.newSource("assets/explosao2.ogg", "static"),
 		balas = love.audio.newSource("assets/tiro.ogg", "static"),
 		phase = love.audio.newSource("assets/phase.ogg", "static"),
-		musica1 = love.audio.newSource("assets/musica1.ogg", "static")
+		abertura = love.audio.newSource("assets/abertura.ogg", "stream"),
+		musica1 = love.audio.newSource("assets/musica1.ogg", "stream"),
+		musica2 = love.audio.newSource("assets/musica2.ogg", "stream")
 	}
 }
 
@@ -61,9 +63,10 @@ function love.load(arg)
 		record = tonumber(file:read())
 		file:close()
 	end
-
-	nivel.inicia(recursos)
-
+	recursos.sons.abertura:setVolume(0.5)
+  recursos.sons.abertura:setLooping(true)
+	recursos.sons.abertura:play()
+	--nivel.inicia(recursos)
 end
 
 
@@ -76,6 +79,7 @@ function love.update(dt)
 	if not continua and love.keyboard.isDown('r') then
 		-- remove balas e inimigos fora da area de jogo
 		nivel.fim()
+		paratodosossons()
 		numeroNivel = 1
 		nivel = require ("nivel" .. numeroNivel)
 		nivel.inicia(recursos)
@@ -87,6 +91,8 @@ function love.update(dt)
 
 	if primeiravez then
 		if love.keyboard.isDown('i') then
+			paratodosossons()
+			nivel.inicia(recursos)
 			imagem = recursos.imgs.nivel1
 			tempoMostraImagem = 2
 			primeiravez = false
@@ -114,6 +120,7 @@ function love.update(dt)
 			numeroNivel = math.min(numeroNivel + 1, 4)
 			if numeroNivel ~= antigoNivel then
 				nivel.fim()
+				paratodosossons()
 				nivel = require ("nivel" .. numeroNivel)
 				nivel.inicia(recursos)
 				tempoMostraImagem = 2
@@ -134,12 +141,20 @@ function love.update(dt)
 	posimagem.y = 100 + 50 * math.sin(tempoMostraImagem)
 end
 
+function paratodosossons()
+	for i, som in pairs(recursos.sons) do
+		if som ~= recursos.sons.inimigo and som ~= recursos.sons.jogador then
+			som:stop()
+		end
+	end
+end
 
 function endGame()
-
 	if record < pontos then
 		record = pontos
 	end
+	paratodosossons()
+	recursos.sons.abertura:play()
 
 	-- grava o record
 	file = io.open("data", "w")

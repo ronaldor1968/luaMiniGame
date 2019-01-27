@@ -190,11 +190,15 @@ function atualizaboss1(...)
           boss.y = boss.y - speed
         else
           boss.retirado = true
+          boss.som:stop()
         end
       end
     end
   else
     boss.ativo = (pontos > boss.pontosativo)
+    if (boss.ativo) then
+      boss.som:play()
+    end
   end
 end
 
@@ -321,4 +325,32 @@ function colisaobalainimigo4jogador(...)
     end
 	end
   return deltapontos
+end
+
+function reinicializa1(...)
+  local balas, inimigo, boss, jogador = ...
+  balas.lista = {}
+  balas.tempoRecarga = 0.2
+  balas.tempoAposUltimoTiro = balas.tempoRecarga
+  inimigo.lista = {}
+  inimigo.tempoCriacao = 1
+  inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
+	boss.y = -700
+  boss.iniciado = false
+  boss.retirado = false
+  boss.ativo = false
+  boss.retirada = false
+  jogador.vivo = false
+end
+
+function reinicializa2(...)
+  local phase = ...
+  phase.intervaloMaximo = 15
+  phase.tempoAposUltimoTiro = phase.intervaloMaximo
+  phase.y = 1000
+end
+
+function reinicializa3(...)
+  local poc = ...
+  poc.ybase = -1000
 end

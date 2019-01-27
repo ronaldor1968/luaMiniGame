@@ -65,18 +65,9 @@ end
 
 function nivel3.fim()
   -- reinicia os valores
-  balas.lista = {}
-  balas.tempoRecarga = 0.5
-  balas.tempoAposUltimoTiro = balas.tempoRecarga
-  inimigo.lista = {}
-  inimigo.tempoCriacao = 1
-  inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
-  phase.intervaloMaximo = 15
-  phase.tempoAposUltimoTiro = phase.intervaloMaximo
-  phase.y = 1000
-	cobra.ybase = -1000
-  jogador.vivo = false
-	musica.som:stop()
+	reinicializa1(balas, inimigo, boss, jogador)
+  reinicializa2(phase)
+	reinicializa3(cobra)
 end
 
 function nivel3.atualiza(dt)
