@@ -18,7 +18,7 @@ for i=1,10 do
 	table.insert(cobra.lista, {x = 0 , y = 0, viva = true})
 end
 
-local boss = {x = -60, y = -600, danos = 0, limitedanos = 100, iniciado = false, retirado = false, ativo = false, retirada = false, pontosativo = 400, pontosretirada = 40}
+local boss = {x = -60, y = -600, danos = 0, limitedanos = 100, iniciado = false, retirado = false, ativo = false, retirada = false, pontosativo = 450, pontosretirada = 40}
 local balasboss = {img =nil, som = nil, tempoRecarga = 0.5, tempoAposUltimoTiro = 0.5, recarregado = true, lista = {}}
 
 function nivel3.inicia(recursos)
@@ -46,6 +46,13 @@ function nivel3.inicia(recursos)
 	musica.som:setLooping(true)
 	cobra.img = recursos.imgs.cobra
 	cobra.som = recursos.sons.inimigo
+
+	boss.img = recursos.imgs.boss1
+  boss.hw = boss.img:getWidth() / 2
+	boss.hh = boss.img:getWidth() / 2
+  boss.som = recursos.sons.musica2
+  boss.som:setVolume(0.3)
+  boss.som:setLooping(true)
 
 	local pixelcode = [[
 
