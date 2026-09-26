@@ -1,7 +1,11 @@
 # luaMiniGame
 Mini game developed in one day in love2d (lua) 
 
-Somente uma brincadeira de fim de semana, demonstra a potencialidadade e facilidade
+[Download executável para windows](https://github.com/ronaldor1968/luaMiniGame/releases/download/0.0.3/distwin.zip).
+
+[Ultima Release](https://github.com/ronaldor1968/luaMiniGame/releases/tag/0.0.3).
+
+Somente uma brincadeira de fim de semana, demonstra a potencialidade e facilidade
 de fazer jogos simples em love2d com lua.
 
 ![Screenshot 1](Screenshot%20from%202019-01-27%2017-41-10.png?raw=true "Screen Shot 1")
