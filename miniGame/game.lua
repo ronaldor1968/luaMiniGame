@@ -164,7 +164,8 @@ vec4 effect(vec4 color, Image texture, vec2 uv, vec2 screenCoords) {
   col = col * (1.0 - shA * (1.0 - base.r) * 0.35);
 
   float a = min(max(base.r, max(glowA, shA)), 1.0);
-  return vec4(col * color.rgb, a * color.a);
+  float f = screenCoords.y / 1200 + screenCoords.x / 1200;
+  return vec4(f * col * color.rgb, a * color.a);
 }
     ]]
 
