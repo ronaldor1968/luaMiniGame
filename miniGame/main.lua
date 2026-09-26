@@ -1,8 +1,7 @@
 require "utils"
-require "rotinas"
 
 -- estados
-local pontos  = 0
+local pontos = 0
 local record = 0
 local continua = true
 local numeroNivel = 1
@@ -12,8 +11,7 @@ local posimagem = {x = 20, y = 100}
 local primeiravez = true
 local finalizado = false
 
-local nivel = require ("nivel" .. numeroNivel)
-
+local nivel = require("nivel" .. numeroNivel)
 
 local recursos = {
 	imgs = {
@@ -35,9 +33,8 @@ local recursos = {
 		boss1 = love.graphics.newImage("assets/boss1.png"),
 		cobra = love.graphics.newImage("assets/sphera.png"),
 		prato = love.graphics.newImage("assets/prato.png"),
-		explosao = {nil,nil,nil,nil,nil,nil,nil,nil}
+		explosao = {nil, nil, nil, nil, nil, nil, nil, nil}
 	},
-
 	sons = {
 		inimigo = love.audio.newSource("assets/explosao1.ogg", "static"),
 		jogador = love.audio.newSource("assets/explosao2.ogg", "static"),
@@ -50,9 +47,8 @@ local recursos = {
 }
 
 for i = 1, 8 do
-	recursos.imgs.explosao[i] = love.graphics.newImage("assets/exp"..i..".png")
+	recursos.imgs.explosao[i] = love.graphics.newImage("assets/exp" .. i .. ".png")
 end
-
 
 -- Loading
 function love.load(arg)
@@ -64,24 +60,23 @@ function love.load(arg)
 		file:close()
 	end
 	recursos.sons.abertura:setVolume(0.5)
-  recursos.sons.abertura:setLooping(true)
+	recursos.sons.abertura:setLooping(true)
 	recursos.sons.abertura:play()
 	--nivel.inicia(recursos)
 end
 
-
 -- calcula
 function love.update(dt)
-	if love.keyboard.isDown('escape') then
+	if love.keyboard.isDown("escape") then
 		love.event.quit(0)
 	end
 
-	if not continua and love.keyboard.isDown('r') then
+	if not continua and love.keyboard.isDown("r") then
 		-- remove balas e inimigos fora da area de jogo
 		nivel.fim()
 		paratodosossons()
 		numeroNivel = 1
-		nivel = require ("nivel" .. numeroNivel)
+		nivel = require("nivel" .. numeroNivel)
 		nivel.inicia(recursos)
 		tempoMostraImagem = 2
 		imagem = recursos.imgs.nivel1
@@ -90,7 +85,7 @@ function love.update(dt)
 	end
 
 	if primeiravez then
-		if love.keyboard.isDown('i') then
+		if love.keyboard.isDown("i") then
 			paratodosossons()
 			nivel.inicia(recursos)
 			imagem = recursos.imgs.nivel1
@@ -103,7 +98,7 @@ function love.update(dt)
 	end
 
 	if imagem ~= nil and continua then
-		tempoMostraImagem = tempoMostraImagem - dt;
+		tempoMostraImagem = tempoMostraImagem - dt
 		if tempoMostraImagem < 0 then
 			imagem = nil
 		end
@@ -121,7 +116,7 @@ function love.update(dt)
 			if numeroNivel ~= antigoNivel then
 				nivel.fim()
 				paratodosossons()
-				nivel = require ("nivel" .. numeroNivel)
+				nivel = require("nivel" .. numeroNivel)
 				nivel.inicia(recursos)
 				tempoMostraImagem = 2
 				if numeroNivel == 2 then
@@ -167,7 +162,6 @@ end
 
 -- desenha
 function love.draw()
-
 	if not primeiravez then
 		nivel.desenha()
 	end
@@ -178,7 +172,7 @@ function love.draw()
 	love.graphics.print("pontos: " .. tostring(pontos), 400, 10)
 
 	if primeiravez then
-		love.graphics.setBackgroundColor(0.1, 0.1,  0.1, 1)
+		love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
 		love.graphics.draw(recursos.imgs.titulo, 30, 250)
 		love.graphics.draw(recursos.imgs.texto1, -10, 650)
 		love.graphics.draw(recursos.imgs.texto3, -10, 700)
@@ -191,7 +185,6 @@ function love.draw()
 		love.graphics.draw(recursos.imgs.texto3, -10, 700)
 	end
 
-
 	if imagem ~= nil then
 		love.graphics.draw(imagem, posimagem.x, posimagem.y)
 	end
@@ -201,15 +194,14 @@ function love.draw()
 		table.remove(debug_rect, i)
 	end
 
-	love.graphics.setColor(1,0,0,1)
+	love.graphics.setColor(1, 0, 0, 1)
 	for i, j in pairs(debug_text) do
 		love.graphics.print(j, 10, 600 + i * 10)
 		table.remove(debug_text, i)
 	end
-	love.graphics.setColor(1,1,1,1)
+	love.graphics.setColor(1, 1, 1, 1)
 
 	--love.graphics.print("FPS:"..love.timer.getFPS(), 9, 780)
 
 	--love.graphics.print("ANG:"..angular, 9, 780)
-
 end
