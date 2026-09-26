@@ -16,6 +16,28 @@ Todas as imágens e sons foram implemeentados por mim e pelo meu filho Pedro, de
 
 ## Changelog
 
+### Todos os textos do menu/configuração agora são imagens PNG (alta qualidade)
+- **`texto1..3.png` regenerados** (DejaVu Sans Bold, 500x108, fundo transparente,
+  contorno escuro, estilo consistente): "Pressione I para Iniciar", "Pressione R para
+  Reiniciar", "Pressione Esc para Sair".
+- **Novas imagens** para os textos que usavam a fonte simples do love2d:
+  - `texto4.png` — "Pressiona C para Configurações" (antes apenas "C - Opcoes" em 12px,
+    quase invisível no menu e no game over)
+  - `texto5.png` — "CONFIGURAÇÕES" (título do ecrã de configurações, verde como o título do jogo)
+  - `texto6/7.png` — "Som: ATIVADO/DESATIVADO (tecla S)"
+  - `texto8/9.png` — "Música: ATIVADO/DESATIVADO (tecla M)"
+  - `texto10.png` — "V - Voltar ao menu anterior"
+  - `texto11.png` — "ESC - Sair"
+- **`desenhaConfig`** agora desenha apenas imagens (o estado ATIVADO/DESATIVADO escolhe
+  entre as duas variantes de cada linha).
+- **HUD dinâmico** ("pontos:"/"record:"): como os valores mudam em tempo real não podem
+  ser imagens; passa a usar `assets/fonte.ttf` (DejaVu Sans Bold, 26px) em vez da fonte
+  predefinida de 12px, alinhado à direita/esquerda.
+- **`gerar_textos.sh`**: script (ImageMagick) usado para gerar todas as imagens de texto;
+  permite regenerá-las mudando textos, cores ou tamanhos.
+- Posições do menu ajustadas (y=586/654/722) para as imagens de 108px não ficarem
+  cortadas na margem inferior da janela (480x800).
+
 ### Refatoração de código compartilhado (prioridade Alta)
 - **Novo módulo `game.lua`**: centraliza todo o código idêntico entre os 4 níveis
   (movimento, tiro, explosões, nuvens/solo, colisões, reinicialização de entidades,

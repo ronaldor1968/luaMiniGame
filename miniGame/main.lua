@@ -21,6 +21,14 @@ local recursos = {
 		texto1 = love.graphics.newImage("assets/texto1.png"),
 		texto2 = love.graphics.newImage("assets/texto2.png"),
 		texto3 = love.graphics.newImage("assets/texto3.png"),
+		texto4 = love.graphics.newImage("assets/texto4.png"),
+		texto5 = love.graphics.newImage("assets/texto5.png"),
+		texto6 = love.graphics.newImage("assets/texto6.png"),
+		texto7 = love.graphics.newImage("assets/texto7.png"),
+		texto8 = love.graphics.newImage("assets/texto8.png"),
+		texto9 = love.graphics.newImage("assets/texto9.png"),
+		texto10 = love.graphics.newImage("assets/texto10.png"),
+		texto11 = love.graphics.newImage("assets/texto11.png"),
 		nivel1 = love.graphics.newImage("assets/nivel1.png"),
 		nivel2 = love.graphics.newImage("assets/nivel2.png"),
 		nivel3 = love.graphics.newImage("assets/nivel3.png"),
@@ -64,6 +72,8 @@ function love.load(arg)
 	recursos.sons.abertura:setVolume(0.5)
 	recursos.sons.abertura:setLooping(true)
 	tocarMusica(recursos.sons.abertura)
+	-- fonte para os valores dinamicos (pontos/record) que nao podem ser imagens
+	recursos.fonteHUD = love.graphics.newFont("assets/fonte.ttf", 26)
 	--nivel.inicia(recursos)
 end
 
@@ -201,13 +211,14 @@ function aplicarConfigMusica()
 	end
 end
 
+-- ecran de configuracoes (todas as imagens em assets/texto5..11.png)
 function desenhaConfig()
 	love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
-	love.graphics.print("CONFIGURACOES", 150, 150)
-	love.graphics.print("Som:    " .. (config_jogo.som and "ATIVADO" or "DESATIVADO") .. "   (tecla S)", 60, 250)
-	love.graphics.print("Musica: " .. (config_jogo.musica and "ATIVADO" or "DESATIVADO") .. "   (tecla M)", 60, 300)
-	love.graphics.print("V - Voltar ao menu anterior", 60, 430)
-	love.graphics.print("ESC - Sair", 60, 470)
+	love.graphics.draw(recursos.imgs.texto5, 0, 130) -- CONFIGURACOES
+	love.graphics.draw(config_jogo.som and recursos.imgs.texto6 or recursos.imgs.texto7, 0, 320)
+	love.graphics.draw(config_jogo.musica and recursos.imgs.texto8 or recursos.imgs.texto9, 0, 400)
+	love.graphics.draw(recursos.imgs.texto10, 0, 560) -- V - Voltar ao menu anterior
+	love.graphics.draw(recursos.imgs.texto11, 0, 640) -- ESC - Sair
 end
 
 function endGame()
@@ -237,25 +248,29 @@ function love.draw()
 		nivel.desenha()
 	end
 
+	love.graphics.setFont(recursos.fonteHUD)
 	if record > 0 then
-		love.graphics.print("record: " .. tostring(record), 0, 10)
+		love.graphics.print("record: " .. tostring(record), 0, 8)
 	end
-	love.graphics.print("pontos: " .. tostring(pontos), 400, 10)
+	-- alinhamento a direita sem printf (incompativel com algumas versoes do love)
+	local textoPontos = "pontos: " .. tostring(pontos)
+	love.graphics.print(textoPontos, 474 - love.graphics.getFont():getWidth(textoPontos), 8)
+	love.graphics.setFont(love.graphics.getFont())
 
 	if primeiravez then
 		love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
 		love.graphics.draw(recursos.imgs.titulo, 30, 250)
-		love.graphics.draw(recursos.imgs.texto1, -10, 650)
-		love.graphics.draw(recursos.imgs.texto3, -10, 700)
-		love.graphics.print("C - Opcoes", -10, 750)
+		love.graphics.draw(recursos.imgs.texto1, -10, 586)
+		love.graphics.draw(recursos.imgs.texto3, -10, 654)
+		love.graphics.draw(recursos.imgs.texto4, -10, 722)
 		return
 	end
 
 	if not continua then
 		love.graphics.draw(recursos.imgs.titulo, 30, 350)
-		love.graphics.draw(recursos.imgs.texto2, -10, 650)
-		love.graphics.draw(recursos.imgs.texto3, -10, 700)
-		love.graphics.print("C - Opcoes", -10, 750)
+		love.graphics.draw(recursos.imgs.texto2, -10, 586)
+		love.graphics.draw(recursos.imgs.texto3, -10, 654)
+		love.graphics.draw(recursos.imgs.texto4, -10, 722)
 	end
 
 	if imagem ~= nil then
