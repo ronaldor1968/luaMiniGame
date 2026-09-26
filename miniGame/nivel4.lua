@@ -8,10 +8,8 @@ for i = 1, 10 do
     table.insert(prato.lista, {x = 0, y = 0, viva = true})
 end
 local phase = {img = nil, som = nil, x = 300, y = 8000, intervaloMaximo = 15, tempoAposUltimoTiro = 15}
-local pontos = 0
 
 function nivel4.inicia(recursos)
-    pontos = 0
     game.configurar(recursos)
     game.boss = {
         x = -60,
@@ -35,7 +33,7 @@ function nivel4.inicia(recursos)
     prato.som = recursos.sons.inimigo
     phase.img = recursos.imgs.phase
     phase.som = recursos.sons.phase
-    game.musica.som:play()
+    tocarMusica(game.musica.som)
 end
 
 function nivel4.fim()
@@ -61,14 +59,14 @@ function nivel4.atualiza(dt)
     -- move nuvens e solo
     game.movenuvenssolo(dt, game.nuvem, game.solo, deltaTmp3, deltaTmp7)
     -- atualiza posicao inimigo
-    game.atualizainimigos1(dt, pontos, game.inimigo, deltaTmp6, deltaTmp4)
+    game.atualizainimigos1(dt, game.pontos, game.inimigo, deltaTmp6, deltaTmp4)
     game.atualizainimigos2(dt, phase, deltaTmp4, deltaTmp5)
-    game.atualizainimigos4(dt, game.angular, pontos, prato, deltaTmp6)
-    game.atualizaboss1(dt, pontos, game.boss, 20, deltaTmp6)
+    game.atualizainimigos4(dt, game.angular, game.pontos, prato, deltaTmp6)
+    game.atualizaboss1(dt, game.pontos, game.boss, 20, deltaTmp6)
 
     -- se o jogador morreu, nao atualiza o resto
     if not game.jogador.vivo then
-        return pontos, false
+        return game.pontos, false
     end
 
     game.angular = game.angular + dt
@@ -77,16 +75,16 @@ function nivel4.atualiza(dt)
     end
 
     -- atualiza dificuldade
-    game.atualizaDificuldade(pontos, phase)
+    game.atualizaDificuldade(game.pontos, phase)
 
     -- testa colisoes
-    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)
+    game.pontos = game.pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, game.pontos)
 
     game.colisaoinimigo2jogador(dt, phase, game.jogador, game.explosao)
 
-    pontos = pontos + game.colisaobalainimigo4jogador(dt, game.balas, prato, game.jogador, game.explosao)
+    game.pontos = game.pontos + game.colisaobalainimigo4jogador(dt, game.balas, prato, game.jogador, game.explosao)
 
-    return pontos, game.jogador.vivo, not game.boss.retirado
+    return game.pontos, game.jogador.vivo, not game.boss.retirado
 end
 
 function nivel4.desenha()

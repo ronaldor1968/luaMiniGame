@@ -1,4 +1,5 @@
 require "utils"
+local game = require("game")
 
 -- estados
 local pontos = 0
@@ -10,6 +11,7 @@ local imagem = nil
 local posimagem = {x = 20, y = 100}
 local primeiravez = true
 local finalizado = false
+local ecra = "menu" -- "menu" | "config"
 
 local nivel = require("nivel" .. numeroNivel)
 
@@ -61,7 +63,7 @@ function love.load(arg)
 	end
 	recursos.sons.abertura:setVolume(0.5)
 	recursos.sons.abertura:setLooping(true)
-	recursos.sons.abertura:play()
+	tocarMusica(recursos.sons.abertura)
 	--nivel.inicia(recursos)
 end
 
@@ -69,6 +71,11 @@ end
 function love.update(dt)
 	if love.keyboard.isDown("escape") then
 		love.event.quit(0)
+	end
+
+	if ecra == "config" then
+		atualizaConfig()
+		return
 	end
 
 	if not continua and love.keyboard.isDown("r") then
@@ -82,6 +89,12 @@ function love.update(dt)
 		imagem = recursos.imgs.nivel1
 		continua = true
 		finalizado = false
+	end
+
+	-- abre o ecran de configuracoes (no menu ou no game over)
+	if (primeiravez or not continua) and love.keyboard.isDown("c") then
+		ecra = "config"
+		return
 	end
 
 	if primeiravez then
@@ -144,12 +157,65 @@ function paratodosossons()
 	end
 end
 
+-- ecran de configuracoes
+local sonsEfeitos = {recursos.sons.inimigo, recursos.sons.jogador, recursos.sons.balas, recursos.sons.phase}
+local sonsMusicas = {recursos.sons.abertura, recursos.sons.musica1, recursos.sons.musica2}
+
+function atualizaConfig()
+	if love.keyboard.isDown("s") then
+		config_jogo.som = not config_jogo.som
+		if not config_jogo.som then
+			aplicarConfigSom()
+		end
+	end
+	if love.keyboard.isDown("m") then
+		config_jogo.musica = not config_jogo.musica
+		aplicarConfigMusica()
+	end
+	if love.keyboard.isDown("v") then
+		ecra = "menu"
+		aplicarConfigMusica()
+	end
+end
+
+function aplicarConfigSom()
+	for _, som in ipairs(sonsEfeitos) do
+		som:stop()
+	end
+end
+
+function aplicarConfigMusica()
+	if not config_jogo.musica then
+		for _, som in ipairs(sonsMusicas) do
+			som:stop()
+		end
+		return
+	end
+	-- retoma a musica adequada ao ecran atual
+	if primeiravez or not continua then
+		recursos.sons.abertura:play()
+	elseif game.boss and game.boss.ativo and game.boss.som then
+		game.boss.som:play()
+	elseif game.musica and game.musica.som then
+		game.musica.som:play()
+	end
+end
+
+function desenhaConfig()
+	love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
+	love.graphics.print("CONFIGURACOES", 150, 150)
+	love.graphics.print("Som:    " .. (config_jogo.som and "ATIVADO" or "DESATIVADO") .. "   (tecla S)", 60, 250)
+	love.graphics.print("Musica: " .. (config_jogo.musica and "ATIVADO" or "DESATIVADO") .. "   (tecla M)", 60, 300)
+	love.graphics.print("V - Voltar ao menu anterior", 60, 430)
+	love.graphics.print("ESC - Sair", 60, 470)
+end
+
 function endGame()
 	if record < pontos then
 		record = pontos
 	end
 	paratodosossons()
-	recursos.sons.abertura:play()
+	tocarMusica(recursos.sons.abertura)
 
 	-- grava o record
 	file = io.open("data", "w")
@@ -162,6 +228,11 @@ end
 
 -- desenha
 function love.draw()
+	if ecra == "config" then
+		desenhaConfig()
+		return
+	end
+
 	if not primeiravez then
 		nivel.desenha()
 	end
@@ -176,6 +247,7 @@ function love.draw()
 		love.graphics.draw(recursos.imgs.titulo, 30, 250)
 		love.graphics.draw(recursos.imgs.texto1, -10, 650)
 		love.graphics.draw(recursos.imgs.texto3, -10, 700)
+		love.graphics.print("C - Opcoes", -10, 750)
 		return
 	end
 
@@ -183,6 +255,7 @@ function love.draw()
 		love.graphics.draw(recursos.imgs.titulo, 30, 350)
 		love.graphics.draw(recursos.imgs.texto2, -10, 650)
 		love.graphics.draw(recursos.imgs.texto3, -10, 700)
+		love.graphics.print("C - Opcoes", -10, 750)
 	end
 
 	if imagem ~= nil then

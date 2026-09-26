@@ -3,11 +3,11 @@
 -- Todo o resto (movimento, tiro, explosões, nuvens, colisões, render) está em game.lua.
 local nivel1 = {}
 local game = require("game")
-local pontos = 0
 
 function nivel1.inicia(recursos)
-    pontos = 0
     game.configurar(recursos)
+    -- novo jogo: zeros pontos (os demais niveis apenas acumulam)
+    game.pontos = 0
     game.boss = {
         x = -60,
         y = -600,
@@ -26,7 +26,7 @@ function nivel1.inicia(recursos)
     game.boss.som = recursos.sons.musica2
     game.boss.som:setVolume(0.3)
     game.boss.som:setLooping(true)
-    game.musica.som:play()
+    tocarMusica(game.musica.som)
 end
 
 function nivel1.fim()
@@ -48,12 +48,12 @@ function nivel1.atualiza(dt)
     -- move nuvens e solo
     game.movenuvenssolo(dt, game.nuvem, game.solo, deltaTmp3, deltaTmp7)
     -- atualiza posicao inimigo
-    game.atualizainimigos1(dt, pontos, game.inimigo, deltaTmp6, deltaTmp4)
-    game.atualizaboss1(dt, pontos, game.boss, 20, deltaTmp6)
+    game.atualizainimigos1(dt, game.pontos, game.inimigo, deltaTmp6, deltaTmp4)
+    game.atualizaboss1(dt, game.pontos, game.boss, 20, deltaTmp6)
 
     -- se o jogador morreu, nao atualiza o resto
     if not game.jogador.vivo then
-        return pontos, false
+        return game.pontos, false
     end
 
     game.angular = game.angular + dt
@@ -62,9 +62,9 @@ function nivel1.atualiza(dt)
     end
 
     -- atualiza dificuldade
-    if pontos > 10 then
+    if game.pontos > 10 then
         game.inimigo.tempoCriacao = 1
-        if pontos < 50 then
+        if game.pontos < 50 then
             game.inimigo.tempoCriacao = 0.9
             game.balas.tempoRecarga = 0.15
         else
@@ -74,9 +74,9 @@ function nivel1.atualiza(dt)
     end
 
     -- testa colisoes
-    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)
+    game.pontos = game.pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, game.pontos)
 
-    return pontos, game.jogador.vivo, not game.boss.retirado
+    return game.pontos, game.jogador.vivo, not game.boss.retirado
 end
 
 function nivel1.desenha()

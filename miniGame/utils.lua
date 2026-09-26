@@ -1,6 +1,24 @@
 debug_rect = {}
 debug_text = {}
 
+-- configuracoes do jogo (alteradas no ecran de opcoes)
+config_jogo = {som = true, musica = true}
+
+-- reproduz um efeito sonoro respeitando a configuracao de som
+function tocarEfeito(som)
+	if config_jogo.som then
+		som:stop()
+		som:play()
+	end
+end
+
+-- reproduz uma musica respeitando a configuracao de musica
+function tocarMusica(som)
+	if config_jogo.musica then
+		som:play()
+	end
+end
+
 
 function testaColisao(a, b)
 	local erro = a.img:getWidth() / 4

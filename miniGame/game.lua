@@ -9,6 +9,10 @@ require "utils"
 
 local game = {}
 
+-- pontos partilhados entre os niveis (acumulam; sao zerados apenas ao
+-- iniciar um novo jogo, em nivel1.inicia)
+game.pontos = 0
+
 -- ============================================================
 -- Entidades compartilhadas
 -- ============================================================
@@ -156,8 +160,7 @@ function game.dispara(...)
             table.insert(balas.lista, newBullet)
             balas.recarregado = false
             balas.tempoAposUltimoTiro = balas.tempoRecarga
-            balas.som:stop()
-            balas.som:play()
+            tocarEfeito(balas.som)
         end
     else
         balas.tempoAposUltimoTiro = balas.tempoAposUltimoTiro - deltaRecarga
@@ -265,8 +268,7 @@ function game.atualizainimigos2(...)
         phase.y = -800
         phase.x = math.random(10, 510)
         phase.tempoAposUltimoTiro = phase.intervaloMaximo
-        phase.som:stop()
-        phase.som:play()
+        tocarEfeito(phase.som)
     else
         phase.y = phase.y + deltaSpeed
     end
@@ -330,7 +332,7 @@ function game.atualizaboss1(...)
     else
         boss.ativo = (pontos > boss.pontosativo)
         if (boss.ativo) then
-            boss.som:play()
+            tocarMusica(boss.som)
         end
     end
 end
@@ -355,8 +357,7 @@ function game.colisaobalainimigojogador(...)
         for j, blTmp in pairs(balas.lista) do
             if testesSimplesDeColisao(iniTmp.x, iniTmp.y, w1, h1, blTmp.x, blTmp.y, w2, h2) then
                 inimigo.maximo = 2 + pontos / 10
-                inimigo.som:stop()
-                inimigo.som:play()
+                tocarEfeito(inimigo.som)
                 deltapontos = deltapontos + 1
                 table.insert(explosao.lista, {x = iniTmp.x - 80, y = iniTmp.y - 80, tempo = explosao.tempoExplosao, indice = 1})
                 table.insert(removerBala, j)
@@ -366,9 +367,8 @@ function game.colisaobalainimigojogador(...)
         end
 
         if testesSimplesDeColisao(iniTmp.x, iniTmp.y, w1, h1, jogador.x, jogador.y, w3, h3) then
-            jogador.som:play()
-            inimigo.som:stop()
-            inimigo.som:play()
+            tocarEfeito(jogador.som)
+            tocarEfeito(inimigo.som)
             table.insert(removerInimigo, i)
             table.insert(explosao.lista, {x = iniTmp.x - 80, y = iniTmp.y - 80, tempo = explosao.tempoExplosao, indice = 1})
             table.insert(explosao.lista, {x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
@@ -391,7 +391,7 @@ end
 function game.colisaoinimigo2jogador(...)
     local dt, phase, jogador, explosao = ...
     if testaColisao(phase, jogador) then
-        jogador.som:play()
+        tocarEfeito(jogador.som)
         table.insert(explosao.lista, {x = jogador.x - 80, y = jogador.y - 80, tempo = explosao.tempoExplosao, indice = 1})
         jogador.vivo = false
     end
@@ -413,8 +413,7 @@ function game.colisaobalainimigo3jogador(...)
         if clbBase.viva then
             for j, blTmp in pairs(balas.lista) do
                 if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, w1, h1, blTmp.x, blTmp.y, w2, h2) then
-                    cobra.som:stop()
-                    cobra.som:play()
+                    tocarEfeito(cobra.som)
                     deltapontos = deltapontos + 1
                     table.insert(
                         explosao.lista,
@@ -427,9 +426,8 @@ function game.colisaobalainimigo3jogador(...)
             end
 
             if testesSimplesDeColisao(cobra.xbase + clbBase.x, cobra.ybase + clbBase.y, w1, h1, jogador.x, jogador.y, w3, h3) then
-                jogador.som:play()
-                cobra.som:stop()
-                cobra.som:play()
+                tocarEfeito(jogador.som)
+                tocarEfeito(cobra.som)
                 table.insert(removerCobra, i)
                 table.insert(
                     explosao.lista,
@@ -469,8 +467,7 @@ function game.colisaobalainimigo4jogador(...)
         if clbBase.viva then
             for j, blTmp in pairs(balas.lista) do
                 if testesSimplesDeColisao(prato.xbase + clbBase.x, prato.ybase + clbBase.y, w1, h1, blTmp.x, blTmp.y, w2, h2) then
-                    prato.som:stop()
-                    prato.som:play()
+                    tocarEfeito(prato.som)
                     deltapontos = deltapontos + 1
                     table.insert(
                         explosao.lista,
@@ -483,9 +480,8 @@ function game.colisaobalainimigo4jogador(...)
             end
 
             if testesSimplesDeColisao(prato.xbase + clbBase.x, prato.ybase + clbBase.y, w1, h1, jogador.x, jogador.y, w3, h3) then
-                jogador.som:play()
-                prato.som:stop()
-                prato.som:play()
+                tocarEfeito(jogador.som)
+                tocarEfeito(prato.som)
                 table.insert(removerPrato, i)
                 table.insert(
                     explosao.lista,
