@@ -77,31 +77,7 @@ function nivel4.atualiza(dt)
     end
 
     -- atualiza dificuldade
-    if pontos > 10 then
-        game.inimigo.tempoCriacao = 1
-        phase.intervaloMaximo = 13
-        if pontos < 200 then
-            game.inimigo.tempoCriacao = 0.9
-            phase.intervaloMaximo = 12
-            game.balas.tempoRecarga = 0.15
-        elseif pontos < 500 then
-            game.inimigo.tempoCriacao = 0.7
-            phase.intervaloMaximo = 10
-            game.balas.tempoRecarga = 0.1
-        elseif pontos < 1000 then
-            game.inimigo.tempoCriacao = 0.5
-            phase.intervaloMaximo = 7
-        elseif pontos < 3000 then
-            game.inimigo.tempoCriacao = 0.3
-            phase.intervaloMaximo = 5
-        elseif pontos < 5000 then
-            game.inimigo.tempoCriacao = 0.2
-            phase.intervaloMaximo = 4
-        else
-            game.inimigo.tempoCriacao = 0.1
-            phase.intervaloMaximo = 2
-        end
-    end
+    game.atualizaDificuldade(pontos, phase)
 
     -- testa colisoes
     pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)

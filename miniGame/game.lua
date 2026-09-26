@@ -91,8 +91,37 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screenCoords){
 end
 
 -- ============================================================
--- Movimento, tiro, explosoes, ambiente
+-- Movimento, tiro, explosões, ambiente
 -- ============================================================
+
+function game.atualizaDificuldade(...)
+    local pontos, phase = ...
+    if pontos > 10 then
+        game.inimigo.tempoCriacao = 1
+        phase.intervaloMaximo = 13
+        if pontos < 200 then
+            game.inimigo.tempoCriacao = 0.9
+            phase.intervaloMaximo = 12
+            game.balas.tempoRecarga = 0.15
+        elseif pontos < 500 then
+            game.inimigo.tempoCriacao = 0.7
+            phase.intervaloMaximo = 10
+            game.balas.tempoRecarga = 0.1
+        elseif pontos < 1000 then
+            game.inimigo.tempoCriacao = 0.5
+            phase.intervaloMaximo = 7
+        elseif pontos < 3000 then
+            game.inimigo.tempoCriacao = 0.3
+            phase.intervaloMaximo = 5
+        elseif pontos < 5000 then
+            game.inimigo.tempoCriacao = 0.2
+            phase.intervaloMaximo = 4
+        else
+            game.inimigo.tempoCriacao = 0.1
+            phase.intervaloMaximo = 2
+        end
+    end
+end
 
 function game.movejogador(...)
     local dt, jogador = ...
