@@ -3,8 +3,10 @@
 -- Todo o resto (movimento, tiro, explosões, nuvens, colisões, render) está em game.lua.
 local nivel1 = {}
 local game = require("game")
+local pontos = 0
 
 function nivel1.inicia(recursos)
+    pontos = 0
     game.configurar(recursos)
     game.boss = {
         x = -60,
@@ -72,7 +74,7 @@ function nivel1.atualiza(dt)
     end
 
     -- testa colisoes
-    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao)
+    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)
 
     return pontos, game.jogador.vivo, not game.boss.retirado
 end

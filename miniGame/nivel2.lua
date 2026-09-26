@@ -4,8 +4,10 @@ local nivel2 = {}
 local game = require("game")
 
 local phase = {img = nil, som = nil, x = 300, y = 8000, intervaloMaximo = 15, tempoAposUltimoTiro = 15}
+local pontos = 0
 
 function nivel2.inicia(recursos)
+    pontos = 0
     game.configurar(recursos)
     game.boss = {
         x = -60,
@@ -25,6 +27,9 @@ function nivel2.inicia(recursos)
     game.boss.som = recursos.sons.musica2
     game.boss.som:setVolume(0.3)
     game.boss.som:setLooping(true)
+    phase.img = recursos.imgs.phase
+    phase.som = recursos.sons.phase
+    game.musica.som:play()
 end
 
 function nivel2.fim()
@@ -89,7 +94,7 @@ function nivel2.atualiza(dt)
     end
 
     -- testa colisoes
-    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao)
+    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)
 
     game.colisaoinimigo2jogador(dt, phase, game.jogador, game.explosao)
 
@@ -100,7 +105,7 @@ function nivel2.desenha()
     game.desenharCenario(600, 600)
 
     -- phase (desenhado sob a iluminacao do shader) e os inimigos
-    love.graphics.draw(game.phase.img, game.phase.x, game.phase.y)
+    love.graphics.draw(phase.img, phase.x, phase.y)
     for i, iniTmp in pairs(game.inimigo.lista) do
         love.graphics.draw(
             game.inimigo.img,

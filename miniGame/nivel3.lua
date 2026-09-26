@@ -8,8 +8,10 @@ local cobra = {img = nil, lista = {}, xbase = 240, ybase = -1000}
 for i = 1, 10 do
     table.insert(cobra.lista, {x = 0, y = 0, viva = true})
 end
+local pontos = 0
 
 function nivel3.inicia(recursos)
+    pontos = 0
     game.configurar(recursos)
     game.boss = {
         x = -60,
@@ -33,6 +35,7 @@ function nivel3.inicia(recursos)
     phase.som = recursos.sons.phase
     cobra.img = recursos.imgs.cobra
     cobra.som = recursos.sons.inimigo
+    game.musica.som:play()
 end
 
 function nivel3.fim()
@@ -99,7 +102,7 @@ function nivel3.atualiza(dt)
     end
 
     -- testa colisoes
-    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao)
+    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)
 
     game.colisaoinimigo2jogador(dt, phase, game.jogador, game.explosao)
 
@@ -112,7 +115,7 @@ function nivel3.desenha()
     game.desenharCenario(700, 600)
 
     -- phase, inimigos e cobra (desenhados sob a iluminacao do shader)
-    love.graphics.draw(game.phase.img, game.phase.x, game.phase.y)
+    love.graphics.draw(phase.img, phase.x, phase.y)
     for i, iniTmp in pairs(game.inimigo.lista) do
         love.graphics.draw(
             game.inimigo.img,

@@ -57,7 +57,6 @@ function game.configurar(recursos)
     game.inimigo.som:setVolume(0.5)
     game.jogador.img = recursos.imgs.jogador
     game.jogador.som = recursos.sons.jogador
-    game.jogador.som:setVolume(0.8)
     game.jogador.som:setVolume(0.9)
     game.balas.img = recursos.imgs.balas
     game.balas.som = recursos.sons.balas
@@ -95,7 +94,7 @@ end
 -- Movimento, tiro, explosoes, ambiente
 -- ============================================================
 
-function movejogador(...)
+function game.movejogador(...)
     local dt, jogador = ...
     if love.keyboard.isDown("left", "a") then
         if jogador.x > 0 then -- binds us to the map
@@ -119,12 +118,12 @@ function movejogador(...)
     end
 end
 
-function dispara(...)
+function game.dispara(...)
     local dt, jogador, balas, deltaSpeed, deltaRecarga = ...
     if love.keyboard.isDown("space", "rctrl", "lctrl") then
         if jogador.vivo and balas.recarregado then
             -- cria balas
-            newBullet = {x = jogador.x + (jogador.img:getWidth() - balas.img:getWidth()) / 2, y = jogador.y}
+            local newBullet = {x = jogador.x + (jogador.img:getWidth() - balas.img:getWidth()) / 2, y = jogador.y}
             table.insert(balas.lista, newBullet)
             balas.recarregado = false
             balas.tempoAposUltimoTiro = balas.tempoRecarga
@@ -148,7 +147,7 @@ function dispara(...)
     end
 end
 
-function atualizaexplosoes(...)
+function game.atualizaexplosoes(...)
     local dt, explosao, deltaTempo, deltaSpeed = ...
     local remover = {}
     for i, expTmp in pairs(explosao.lista) do
@@ -169,7 +168,7 @@ function atualizaexplosoes(...)
     end
 end
 
-function movenuvenssolo(...)
+function game.movenuvenssolo(...)
     local dt, nuvem, solo, deltaNuvem, deltaSolo = ...
     nuvem.y1 = nuvem.y1 + deltaNuvem
     nuvem.y2 = nuvem.y2 + deltaNuvem
@@ -190,7 +189,7 @@ function movenuvenssolo(...)
     end
 end
 
-function atualizainimigos1(...)
+function game.atualizainimigos1(...)
     local dt, pontos, inimigo, deltaSpeed, deltaTempo = ...
     local remover = {}
     -- atualiza posicao inimigo
@@ -213,7 +212,7 @@ function atualizainimigos1(...)
     inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoAposCriarUltimoInimigo - deltaTempo
     if inimigo.tempoAposCriarUltimoInimigo < 0 then
         inimigo.tempoAposCriarUltimoInimigo = inimigo.tempoCriacao
-        if (table.getn(inimigo.lista) < inimigo.maximo) then
+        if (#inimigo.lista < inimigo.maximo) then
             -- cria novo inimigo
             local dx = math.random(-1, 1) * pontos
             if (dx > 100) then
@@ -229,7 +228,7 @@ function atualizainimigos1(...)
     end
 end
 
-function atualizainimigos2(...)
+function game.atualizainimigos2(...)
     local dt, phase, deltaTempo, deltaSpeed = ...
     phase.tempoAposUltimoTiro = phase.tempoAposUltimoTiro - deltaTempo
     if phase.y > 800 and phase.tempoAposUltimoTiro < 0 then
@@ -244,7 +243,7 @@ function atualizainimigos2(...)
     end
 end
 
-function atualizainimigos3(...)
+function game.atualizainimigos3(...)
     local dt, angular, pontos, cobra, deltaSpeed = ...
     cobra.ybase = cobra.ybase + deltaSpeed
     if cobra.ybase > 1400 then
@@ -260,7 +259,7 @@ function atualizainimigos3(...)
     end
 end
 
-function atualizainimigos4(...)
+function game.atualizainimigos4(...)
     local dt, angular, pontos, prato, deltaSpeed = ...
     prato.ybase = prato.ybase + deltaSpeed
     if prato.ybase > 1400 then
@@ -276,7 +275,7 @@ function atualizainimigos4(...)
     end
 end
 
-function atualizaboss1(...)
+function game.atualizaboss1(...)
     local dt, pontos, boss, pontosboss, speed = ...
 
     if boss.ativo then
@@ -311,8 +310,8 @@ end
 -- Colisoes (corrigido: nao remover durante iteracao com pairs)
 -- ============================================================
 
-function colisaobalainimigojogador(...)
-    local dt, balas, inimigo, jogador, explosao = ...
+function game.colisaobalainimigojogador(...)
+    local dt, balas, inimigo, jogador, explosao, pontos = ...
     local deltapontos = 0
     local tolerancia = 1
     local w1 = inimigo.img:getWidth()
@@ -360,7 +359,7 @@ function colisaobalainimigojogador(...)
     return deltapontos
 end
 
-function colisaoinimigo2jogador(...)
+function game.colisaoinimigo2jogador(...)
     local dt, phase, jogador, explosao = ...
     if testaColisao(phase, jogador) then
         jogador.som:play()
@@ -369,7 +368,7 @@ function colisaoinimigo2jogador(...)
     end
 end
 
-function colisaobalainimigo3jogador(...)
+function game.colisaobalainimigo3jogador(...)
     local dt, balas, cobra, jogador, explosao = ...
     local deltapontos = 0
     local tolerancia = 1
@@ -393,7 +392,7 @@ function colisaobalainimigo3jogador(...)
                         {x = cobra.xbase + clbBase.x - 80, y = cobra.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1}
                     )
                     table.insert(removerBala, j)
-                    table.insert(removerCobra, i)
+                    clbBase.viva = false
                     break
                 end
             end
@@ -425,7 +424,7 @@ function colisaobalainimigo3jogador(...)
     return deltapontos
 end
 
-function colisaobalainimigo4jogador(...)
+function game.colisaobalainimigo4jogador(...)
     local dt, balas, prato, jogador, explosao = ...
     local deltapontos = 0
     local tolerancia = 1
@@ -449,7 +448,7 @@ function colisaobalainimigo4jogador(...)
                         {x = prato.xbase + clbBase.x - 80, y = prato.ybase + clbBase.y - 80, tempo = explosao.tempoExplosao, indice = 1}
                     )
                     table.insert(removerBala, j)
-                    table.insert(removerPrato, i)
+                    clbBase.viva = false
                     break
                 end
             end
@@ -485,7 +484,7 @@ end
 -- Reinicializacao de entidades entre fases
 -- ============================================================
 
-function reinicializa1(...)
+function game.reinicializa1(...)
     local balas, inimigo, boss, jogador = ...
     balas.lista = {}
     balas.tempoRecarga = 0.2
@@ -501,14 +500,14 @@ function reinicializa1(...)
     jogador.vivo = false
 end
 
-function reinicializa2(...)
+function game.reinicializa2(...)
     local phase = ...
     phase.intervaloMaximo = 15
     phase.tempoAposUltimoTiro = phase.intervaloMaximo
     phase.y = 1000
 end
 
-function reinicializa3(...)
+function game.reinicializa3(...)
     local poc = ...
     poc.ybase = -1000
 end
@@ -517,7 +516,7 @@ end
 -- Render compartilhado (cenario + foreground)
 -- ============================================================
 
-function desenharCenario(...)
+function game.desenharCenario(...)
     local base, limite = ...
     love.graphics.setBackgroundColor(0, 0.1, 0.3, 0.1)
 
@@ -532,7 +531,7 @@ function desenharCenario(...)
     love.graphics.draw(game.nuvem.img, 0, game.nuvem.y2 + 300)
 end
 
-function desenharParticulas()
+function game.desenharParticulas()
     love.graphics.setColor(1, 1, 1, 1)
     game.iluminacao = 0
     for i, expTmp in pairs(game.explosao.lista) do
@@ -555,8 +554,7 @@ function desenharParticulas()
     end
 end
 
--- Mantidas para compatibilidade com funcoes acima que as chamam.
-function shaderOn(...)
+function game.shaderOn(...)
     local base, limite = ...
     game.myshader:send("base", base)
     love.graphics.setShader(game.myshader)
@@ -565,7 +563,7 @@ function shaderOn(...)
     end
 end
 
-function shadeOff()
+function game.shadeOff()
     love.graphics.setShader()
 end
 

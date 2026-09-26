@@ -8,8 +8,10 @@ for i = 1, 10 do
     table.insert(prato.lista, {x = 0, y = 0, viva = true})
 end
 local phase = {img = nil, som = nil, x = 300, y = 8000, intervaloMaximo = 15, tempoAposUltimoTiro = 15}
+local pontos = 0
 
 function nivel4.inicia(recursos)
+    pontos = 0
     game.configurar(recursos)
     game.boss = {
         x = -60,
@@ -33,6 +35,7 @@ function nivel4.inicia(recursos)
     prato.som = recursos.sons.inimigo
     phase.img = recursos.imgs.phase
     phase.som = recursos.sons.phase
+    game.musica.som:play()
 end
 
 function nivel4.fim()
@@ -101,7 +104,7 @@ function nivel4.atualiza(dt)
     end
 
     -- testa colisoes
-    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao)
+    pontos = pontos + game.colisaobalainimigojogador(dt, game.balas, game.inimigo, game.jogador, game.explosao, pontos)
 
     game.colisaoinimigo2jogador(dt, phase, game.jogador, game.explosao)
 
@@ -114,7 +117,7 @@ function nivel4.desenha()
     game.desenharCenario(700, 600)
 
     -- phase, inimigos e prato (desenhados sob a iluminacao do shader)
-    love.graphics.draw(game.phase.img, game.phase.x, game.phase.y)
+    love.graphics.draw(phase.img, phase.x, phase.y)
     for i, iniTmp in pairs(game.inimigo.lista) do
         love.graphics.draw(
             game.inimigo.img,
