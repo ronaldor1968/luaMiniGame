@@ -12,6 +12,11 @@ local posimagem = {x = 20, y = 100}
 local primeiravez = true
 local finalizado = false
 local ecra = "menu" -- "menu" | "config"
+local cAnterior = false  -- detecao de pressao da tecla c
+local sAnterior = false  -- detecao de pressao da tecla s
+local mAnterior = false  -- detecao de pressao da tecla m
+local configTempo = 0    -- cooldown restante apos um swap (s/m)
+local CONFIG_ESPERA = 0.4 -- delay minimo entre swaps no ecran de configuracoes
 
 local nivel = require("nivel" .. numeroNivel)
 
@@ -83,8 +88,12 @@ function love.update(dt)
 		love.event.quit(0)
 	end
 
+	-- pressao da tecla c apenas na transicao solta -> premida
+	local cPressionada = love.keyboard.isDown("c") and not cAnterior
+	cAnterior = love.keyboard.isDown("c")
+
 	if ecra == "config" then
-		atualizaConfig()
+		atualizaConfig(dt)
 		return
 	end
 
@@ -102,8 +111,11 @@ function love.update(dt)
 	end
 
 	-- abre o ecran de configuracoes (no menu ou no game over)
-	if (primeiravez or not continua) and love.keyboard.isDown("c") then
+	if (primeiravez or not continua) and cPressionada then
 		ecra = "config"
+		configTempo = 0
+		sAnterior = love.keyboard.isDown("s")
+		mAnterior = love.keyboard.isDown("m")
 		return
 	end
 
@@ -171,17 +183,31 @@ end
 local sonsEfeitos = {recursos.sons.inimigo, recursos.sons.jogador, recursos.sons.balas, recursos.sons.phase}
 local sonsMusicas = {recursos.sons.abertura, recursos.sons.musica1, recursos.sons.musica2}
 
-function atualizaConfig()
-	if love.keyboard.isDown("s") then
+-- s e m sao teclas de swap: so reagem na transicao solta -> premida e com
+-- um pequeno delay (cooldown) para o loop nao efetuar multiplas trocas de
+-- estado numa fracao de segundos quando a tecla fica pressionada
+function atualizaConfig(dt)
+	configTempo = configTempo - dt
+
+	local sAgora = love.keyboard.isDown("s")
+	local mAgora = love.keyboard.isDown("m")
+
+	if sAgora and not sAnterior and configTempo <= 0 then
 		config_jogo.som = not config_jogo.som
 		if not config_jogo.som then
 			aplicarConfigSom()
 		end
+		configTempo = CONFIG_ESPERA
 	end
-	if love.keyboard.isDown("m") then
+	if mAgora and not mAnterior and configTempo <= 0 then
 		config_jogo.musica = not config_jogo.musica
 		aplicarConfigMusica()
+		configTempo = CONFIG_ESPERA
 	end
+
+	sAnterior = sAgora
+	mAnterior = mAgora
+
 	if love.keyboard.isDown("v") then
 		ecra = "menu"
 		aplicarConfigMusica()
@@ -211,14 +237,52 @@ function aplicarConfigMusica()
 	end
 end
 
+-- ---------------------------------------------------------------------------
+-- efeito neon para os textos: os PNG sao texto branco e o shader aplica
+-- glow grande, sombra, pulsacao, tremulacao de letreiro e brilho a correr.
+-- Ajusta tudo aqui:
+--   cor        cor do neon (r, g, b) 0..1
+--   intensidade forca do halo
+--   raio       raio do halo em pixels
+--   velocidade velocidade da pulsacao
+--   tremulacao 0..1 quanta "falha" de letreiro (corticulos ocasionais)
+local NEON = {
+	menu   = {cor = {1.00, 0.16, 0.32}, intensidade = 2.2, raio = 6.0, velocidade = 2.0, tremulacao = 0.6}, -- vermelho
+	titulo = {cor = {0.30, 1.00, 0.12}, intensidade = 2.4, raio = 7.0, velocidade = 1.6, tremulacao = 0.9}, -- verde
+	linha  = {cor = {1.00, 0.93, 0.80}, intensidade = 1.4, raio = 4.5, velocidade = 2.4, tremulacao = 0.3}  -- branco quente
+}
+
+function desenhaNeon(img, x, y, perfil)
+	-- o menu aparece antes do nivel iniciar; cria o shader por lazy init
+	if not game.shaderNeon then
+		game.configurarShader()
+	end
+	local s = game.shaderNeon
+	-- apenas uniforms escalares (send com tabela para vec2/vec3 nao funciona
+	-- nesta versao do LÖVE)
+	s:send("u_glowR", perfil.cor[1])
+	s:send("u_glowG", perfil.cor[2])
+	s:send("u_glowB", perfil.cor[3])
+	s:send("u_glowIntensity", perfil.intensidade)
+	s:send("u_glowRadius", perfil.raio)
+	s:send("u_shadowX", 2)
+	s:send("u_shadowY", 3)
+	s:send("u_shadowStrength", 0.8)
+	s:send("u_speed", perfil.velocidade)
+	s:send("u_flicker", perfil.tremulacao)
+	love.graphics.setShader(s)
+	love.graphics.draw(img, x, y)
+	love.graphics.setShader()
+end
+
 -- ecran de configuracoes (todas as imagens em assets/texto5..11.png)
 function desenhaConfig()
 	love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
-	love.graphics.draw(recursos.imgs.texto5, 0, 130) -- CONFIGURACOES
-	love.graphics.draw(config_jogo.som and recursos.imgs.texto6 or recursos.imgs.texto7, 0, 320)
-	love.graphics.draw(config_jogo.musica and recursos.imgs.texto8 or recursos.imgs.texto9, 0, 400)
-	love.graphics.draw(recursos.imgs.texto10, 0, 560) -- V - Voltar ao menu anterior
-	love.graphics.draw(recursos.imgs.texto11, 0, 640) -- ESC - Sair
+	desenhaNeon(recursos.imgs.texto5, 0, 130, NEON.titulo) -- CONFIGURACOES
+	desenhaNeon(config_jogo.som and recursos.imgs.texto6 or recursos.imgs.texto7, 0, 320, NEON.linha)
+	desenhaNeon(config_jogo.musica and recursos.imgs.texto8 or recursos.imgs.texto9, 0, 400, NEON.linha)
+	desenhaNeon(recursos.imgs.texto10, 0, 560, NEON.linha) -- V - Voltar ao menu anterior
+	desenhaNeon(recursos.imgs.texto11, 0, 640, NEON.linha) -- ESC - Sair
 end
 
 function endGame()
@@ -260,17 +324,17 @@ function love.draw()
 	if primeiravez then
 		love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
 		love.graphics.draw(recursos.imgs.titulo, 30, 250)
-		love.graphics.draw(recursos.imgs.texto1, -10, 586)
-		love.graphics.draw(recursos.imgs.texto3, -10, 654)
-		love.graphics.draw(recursos.imgs.texto4, -10, 722)
+		desenhaNeon(recursos.imgs.texto1, -10, 586, NEON.menu)
+		desenhaNeon(recursos.imgs.texto3, -10, 654, NEON.menu)
+		desenhaNeon(recursos.imgs.texto4, -10, 722, NEON.menu)
 		return
 	end
 
 	if not continua then
 		love.graphics.draw(recursos.imgs.titulo, 30, 350)
-		love.graphics.draw(recursos.imgs.texto2, -10, 586)
-		love.graphics.draw(recursos.imgs.texto3, -10, 654)
-		love.graphics.draw(recursos.imgs.texto4, -10, 722)
+		desenhaNeon(recursos.imgs.texto2, -10, 586, NEON.menu)
+		desenhaNeon(recursos.imgs.texto3, -10, 654, NEON.menu)
+		desenhaNeon(recursos.imgs.texto4, -10, 722, NEON.menu)
 	end
 
 	if imagem ~= nil then

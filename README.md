@@ -20,25 +20,34 @@ Todas as imágens e sons foram implemeentados por mim e pelo meu filho Pedro, de
 
 ## Changelog
 
-### Todos os textos do menu/configuração agora são imagens PNG (alta qualidade)
-- **`texto1..3.png` regenerados** (DejaVu Sans Bold, 500x108, fundo transparente,
-  contorno escuro, estilo consistente): "Pressione I para Iniciar", "Pressione R para
-  Reiniciar", "Pressione Esc para Sair".
+### Todos os textos do menu/configuração em imagens PNG com efeito neon (shader)
+- **`texto1..3.png` regenerados** (DejaVu Sans Bold, texto branco, fundo transparente):
+  "Pressione I para Iniciar", "Pressione R para Reiniciar", "Pressione Esc para Sair".
 - **Novas imagens** para os textos que usavam a fonte simples do love2d:
   - `texto4.png` — "Pressiona C para Configurações" (antes apenas "C - Opcoes" em 12px,
     quase invisível no menu e no game over)
-  - `texto5.png` — "CONFIGURAÇÕES" (título do ecrã de configurações, verde como o título do jogo)
+  - `texto5.png` — "CONFIGURAÇÕES" (título do ecrã de configurações)
   - `texto6/7.png` — "Som: ATIVADO/DESATIVADO (tecla S)"
   - `texto8/9.png` — "Música: ATIVADO/DESATIVADO (tecla M)"
   - `texto10.png` — "V - Voltar ao menu anterior"
   - `texto11.png` — "ESC - Sair"
-- **`desenhaConfig`** agora desenha apenas imagens (o estado ATIVADO/DESATIVADO escolhe
+- **Efeito neon em tempo real**: as imagens são texto branco e um shader
+  (`game.shaderNeon`, criado em `game.configurarShader()` como o shader de
+  iluminação) aplica **brilho** (16 amostras ponderadas da forma do texto, somadas
+  aditivamente, cor configurável) e **sombra** deslocada, via `desenhaNeon` no
+  `main.lua`. Três perfis: `NEON.menu` (vermelho), `NEON.titulo` (verde) e
+  `NEON.linha` (branco quente) — cores, intensidade e raio ajustáveis no `main.lua`.
+  Nota: `send` de vec2/vec3 usa tabelas (`{r, g, b}`) por compatibilidade com a
+  API do LÖVE em uso.
+- **`desenhaConfig`** desenha apenas imagens neon (o estado ATIVADO/DESATIVADO escolhe
   entre as duas variantes de cada linha).
 - **HUD dinâmico** ("pontos:"/"record:"): como os valores mudam em tempo real não podem
   ser imagens; passa a usar `assets/fonte.ttf` (DejaVu Sans Bold, 26px) em vez da fonte
-  predefinida de 12px, alinhado à direita/esquerda.
-- **`gerar_textos.sh`**: script (ImageMagick) usado para gerar todas as imagens de texto;
-  permite regenerá-las mudando textos, cores ou tamanhos.
+  predefinida de 12px.
+- **`gerar_textos.sh`**: script (ImageMagick) usado para gerar todas as imagens de texto
+  brancas; permite regenerá-las mudando textos ou tamanhos.
+- **Debounce de teclas swap** (`s`/`m` nas configurações e `c` no menu): só reagem na
+  transição solta→premida, com cooldown de 0,4 s após cada troca de estado.
 - Posições do menu ajustadas (y=586/654/722) para as imagens de 108px não ficarem
   cortadas na margem inferior da janela (480x800).
 

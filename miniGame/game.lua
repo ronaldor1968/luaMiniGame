@@ -46,6 +46,7 @@ function game.criarEntidades()
     game.angular = 0
     game.iluminacao = 0
     game.myshader = nil
+    game.shaderNeon = nil
     game.musica = {som = nil}
 end
 
@@ -76,6 +77,7 @@ function game.configurar(recursos)
     game.angular = 0
     game.iluminacao = 0
     game.myshader = nil
+    game.shaderNeon = nil
     game.configurarShader()
     game.jogador.vivo = true
 end
@@ -92,6 +94,81 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screenCoords){
     ]]
 
     game.myshader = love.graphics.newShader(pixelcode)
+
+    -- shader de efeito neon (glow + sombra) para os textos do menu/configuracoes
+    -- NAO usar uniforms vec2/vec3: nesta versao do LÖVE o send com tabela
+    -- nao chega ao shader; todos os uniforms sao escalares (mesmo padrão do
+    -- shader de iluminacao acima, cujo send escalar funciona).
+    local neoncode = [[
+extern vec2 texturepx;
+extern float time;
+
+uniform float u_glowR;
+uniform float u_glowG;
+uniform float u_glowB;
+uniform float u_glowIntensity;
+uniform float u_glowRadius;
+uniform float u_shadowX;
+uniform float u_shadowY;
+uniform float u_shadowStrength;
+uniform float u_speed;
+uniform float u_flicker;
+
+vec4 effect(vec4 color, Image texture, vec2 uv, vec2 screenCoords) {
+  vec4 base = Texel(texture, uv);
+  vec3 neon = vec3(u_glowR, u_glowG, u_glowB);
+
+  // --- animacao: pulsacao lenta + tremulacao de letreiro (neon a falhar) ---
+  float pulso = 0.85 + 0.15 * sin(time * u_speed);
+  float ruid = step(0.94, fract(sin(floor(time * 18.0) * 91.17) * 43758.5453));
+  float anim = mix(pulso, 0.3, ruid * u_flicker);
+
+  // glow: 20 amostras em tres aneis (pseudo-desfoque), somadas
+  vec2 r1 = texturepx * u_glowRadius;
+  vec2 r2 = r1 * 1.7;
+  vec2 r3 = r1 * 2.6;
+  vec4 g = vec4(0.0);
+  g  = Texel(texture, uv + vec2( r1.x,  0.0));
+  g += Texel(texture, uv + vec2(-r1.x,  0.0));
+  g += Texel(texture, uv + vec2( 0.0,  r1.y));
+  g += Texel(texture, uv + vec2( 0.0, -r1.y));
+  g += Texel(texture, uv + vec2( r1.x,  r1.y)) * 0.7;
+  g += Texel(texture, uv + vec2(-r1.x,  r1.y)) * 0.7;
+  g += Texel(texture, uv + vec2( r1.x, -r1.y)) * 0.7;
+  g += Texel(texture, uv + vec2(-r1.x, -r1.y)) * 0.7;
+  g += Texel(texture, uv + vec2( r2.x,  0.0)) * 0.55;
+  g += Texel(texture, uv + vec2(-r2.x,  0.0)) * 0.55;
+  g += Texel(texture, uv + vec2( 0.0,  r2.y)) * 0.55;
+  g += Texel(texture, uv + vec2( 0.0, -r2.y)) * 0.55;
+  g += Texel(texture, uv + vec2( r2.x,  r2.y)) * 0.38;
+  g += Texel(texture, uv + vec2(-r2.x,  r2.y)) * 0.38;
+  g += Texel(texture, uv + vec2( r2.x, -r2.y)) * 0.38;
+  g += Texel(texture, uv + vec2(-r2.x, -r2.y)) * 0.38;
+  g += Texel(texture, uv + vec2( r3.x,  0.0)) * 0.3;
+  g += Texel(texture, uv + vec2(-r3.x,  0.0)) * 0.3;
+  g += Texel(texture, uv + vec2( 0.0,  r3.y)) * 0.3;
+  g += Texel(texture, uv + vec2( 0.0, -r3.y)) * 0.3;
+  float glowA = g.r * u_glowIntensity * anim;
+
+  // sombra: forma do texto deslocada, escurece a area atras
+  vec4 sh = Texel(texture, uv + vec2(u_shadowX, u_shadowY) * texturepx);
+  float shA = sh.r * u_shadowStrength;
+
+  // tubo aceso: branco tingido de neon, pulsa, com brilho a correr ao longo
+  float shimmer = 0.10 * sin(uv.x * 30.0 - time * 2.5);
+  vec3 tubo = mix(vec3(1.0), neon, 0.35) * (0.8 + 0.4 * anim) + vec3(shimmer);
+
+  // cor final: glow aditivo, sombra, tubo por cima
+  vec3 col = max(neon * glowA - vec3(shA * 0.9), vec3(0.0));
+  col = mix(col, tubo, base.r);
+  col = col * (1.0 - shA * (1.0 - base.r) * 0.35);
+
+  float a = min(max(base.r, max(glowA, shA)), 1.0);
+  return vec4(col * color.rgb, a * color.a);
+}
+    ]]
+
+    game.shaderNeon = love.graphics.newShader(neoncode)
 end
 
 -- ============================================================
