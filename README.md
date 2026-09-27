@@ -10,11 +10,8 @@ de fazer jogos simples em love2d com lua.
 
 
 ![Screenshot 1](Screenshot%20from%202026-09-27%2012-29-35.png?raw=true "Screen Shot 1")
-![Screenshot 2](Screenshot%20from%202026-09-27%2012-25-45.png?raw=true "Screen Shot 2")
+![Screenshot 2](Screenshot%20from%202026-09-27%2012-29-59.png?raw=true "Screen Shot 2")
 ![Screenshot 3](Screenshot%20from%202026-09-27%2012-25-45.png?raw=true "Screen Shot 3")
-![Screenshot 4](Screenshot%20from%202019-01-20%2012-25-45.png?raw=true "Screen Shot 4")
-
-
 
 Foi implementado somente com objetivo didático para sair da rotina de trabalhos mais sérios.
 
