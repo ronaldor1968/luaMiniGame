@@ -100,76 +100,333 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screenCoords){
     -- nao chega ao shader; todos os uniforms sao escalares (mesmo padrão do
     -- shader de iluminacao acima, cujo send escalar funciona).
     local neoncode = [[
-extern vec2 texturepx;
+extern vec2 texturepx; // ou os teus uniform float u_texelW, u_texelH
 extern float time;
 
 uniform float u_glowR;
 uniform float u_glowG;
 uniform float u_glowB;
-uniform float u_glowIntensity;
-uniform float u_glowRadius;
-uniform float u_shadowX;
-uniform float u_shadowY;
-uniform float u_shadowStrength;
+uniform float u_glowIntensity; // sugestao: 1.5 a 3.0
+uniform float u_glowRadius;    // sugestao: 2.0 a 5.0
 uniform float u_speed;
 uniform float u_flicker;
 
 vec4 effect(vec4 color, Image texture, vec2 uv, vec2 screenCoords) {
+  
+  // 1
   vec4 base = Texel(texture, uv);
-  vec3 neon = vec3(u_glowR, u_glowG, u_glowB);
-
-  // --- animacao: pulsacao lenta + tremulacao de letreiro (neon a falhar) ---
-  float pulso = 0.85 + 0.15 * sin(time * u_speed);
+  
+  float pulso = 0.85 + 0.45 * sin(time * u_speed);
+  
   float ruid = step(0.94, fract(sin(floor(time * 18.0) * 91.17) * 43758.5453));
+  
+  // Se 'ruid' for 1 (falha ativa) E 'u_flicker' for > 0,
+  // a intensidade cai drasticamente para 0.3 (escuro) instantaneamente.
   float anim = mix(pulso, 0.3, ruid * u_flicker);
 
-  // glow: 20 amostras em tres aneis (pseudo-desfoque), somadas
+  // 3. Amostragem em anéis com pesos normalizados (Gaussiana aproximada)
   vec2 r1 = texturepx * u_glowRadius;
-  vec2 r2 = r1 * 1.7;
-  vec2 r3 = r1 * 2.6;
-  vec4 g = vec4(0.0);
-  g  = Texel(texture, uv + vec2( r1.x,  0.0));
-  g += Texel(texture, uv + vec2(-r1.x,  0.0));
-  g += Texel(texture, uv + vec2( 0.0,  r1.y));
-  g += Texel(texture, uv + vec2( 0.0, -r1.y));
-  g += Texel(texture, uv + vec2( r1.x,  r1.y)) * 0.7;
-  g += Texel(texture, uv + vec2(-r1.x,  r1.y)) * 0.7;
-  g += Texel(texture, uv + vec2( r1.x, -r1.y)) * 0.7;
-  g += Texel(texture, uv + vec2(-r1.x, -r1.y)) * 0.7;
-  g += Texel(texture, uv + vec2( r2.x,  0.0)) * 0.55;
-  g += Texel(texture, uv + vec2(-r2.x,  0.0)) * 0.55;
-  g += Texel(texture, uv + vec2( 0.0,  r2.y)) * 0.55;
-  g += Texel(texture, uv + vec2( 0.0, -r2.y)) * 0.55;
-  g += Texel(texture, uv + vec2( r2.x,  r2.y)) * 0.38;
-  g += Texel(texture, uv + vec2(-r2.x,  r2.y)) * 0.38;
-  g += Texel(texture, uv + vec2( r2.x, -r2.y)) * 0.38;
-  g += Texel(texture, uv + vec2(-r2.x, -r2.y)) * 0.38;
-  g += Texel(texture, uv + vec2( r3.x,  0.0)) * 0.3;
-  g += Texel(texture, uv + vec2(-r3.x,  0.0)) * 0.3;
-  g += Texel(texture, uv + vec2( 0.0,  r3.y)) * 0.3;
-  g += Texel(texture, uv + vec2( 0.0, -r3.y)) * 0.3;
-  float glowA = g.r * u_glowIntensity * anim;
+  vec2 r2 = r1 * 2.0;
+  vec2 r3 = r1 * 3.5;
 
-  // sombra: forma do texto deslocada, escurece a area atras
-  vec4 sh = Texel(texture, uv + vec2(u_shadowX, u_shadowY) * texturepx);
-  float shA = sh.r * u_shadowStrength;
+  float glowSamples = 0.0;
+  // Anel interior
+  glowSamples += Texel(texture, uv + vec2( r1.x,  0.0)).a;
+  glowSamples += Texel(texture, uv + vec2(-r1.x,  0.0)).a;
+  glowSamples += Texel(texture, uv + vec2( 0.0,  r1.y)).a;
+  glowSamples += Texel(texture, uv + vec2( 0.0, -r1.y)).a;
+  // Diagonais anel interior
+  glowSamples += Texel(texture, uv + vec2( r1.x,  r1.y)).a * 0.707;
+  glowSamples += Texel(texture, uv + vec2(-r1.x,  r1.y)).a * 0.707;
+  glowSamples += Texel(texture, uv + vec2( r1.x, -r1.y)).a * 0.707;
+  glowSamples += Texel(texture, uv + vec2(-r1.x, -r1.y)).a * 0.707;
+  // Anel medio
+  glowSamples += Texel(texture, uv + vec2( r2.x,  0.0)).a * 0.5;
+  glowSamples += Texel(texture, uv + vec2(-r2.x,  0.0)).a * 0.5;
+  glowSamples += Texel(texture, uv + vec2( 0.0,  r2.y)).a * 0.5;
+  glowSamples += Texel(texture, uv + vec2( 0.0, -r2.y)).a * 0.5;
+  // Anel exterior
+  glowSamples += Texel(texture, uv + vec2( r3.x,  0.0)).a * 0.25;
+  glowSamples += Texel(texture, uv + vec2(-r3.x,  0.0)).a * 0.25;
+  glowSamples += Texel(texture, uv + vec2( 0.0,  r3.y)).a * 0.25;
+  glowSamples += Texel(texture, uv + vec2( 0.0, -r3.y)).a * 0.25;
 
-  // tubo aceso: branco tingido de neon, pulsa, com brilho a correr ao longo
-  float shimmer = 0.10 * sin(uv.x * 30.0 - time * 2.5);
-  vec3 tubo = mix(vec3(1.0), neon, 0.35) * (0.8 + 0.4 * anim) + vec3(shimmer);
+  // Normaliza a densidade da luz acumulada
+  float glowDensity = (glowSamples / 9.0) * u_glowIntensity * anim;
 
-  // cor final: glow aditivo, sombra, tubo por cima
-  vec3 col = max(neon * glowA - vec3(shA * 0.9), vec3(0.0));
-  col = mix(col, tubo, base.r);
-  col = col * (1.0 - shA * (1.0 - base.r) * 0.35);
+  // Cores do Neon
+  vec3 neonColor = vec3(u_glowR, u_glowG, u_glowB);
 
-  float a = min(max(base.r, max(glowA, shA)), 1.0);
-  float f = screenCoords.y / 1200 + screenCoords.x / 1200;
-  return vec4(f * col * color.rgb, a * color.a);
+  // O "Tubo": o centro da letra deve ser quase branco (luz concentrada)
+  // ligeiramente colorido nas bordas
+  vec3 coreColor = mix(neonColor, vec3(1.0, 1.0, 1.0), 0.85);
+
+  // Composicao da Luz
+  // - Onde ha texto (base.a): mistura do brilho colorido com o centro incandescente
+  // - Fora do texto: apenas a radiacao colorida (glow)
+  vec3 finalRgb = (neonColor * glowDensity) + (coreColor * base.a * anim);
+
+  // Alpha aditivo suave
+  float finalAlpha = clamp(base.a + glowDensity * 0.8, 0.0, 1.0);
+
+  return vec4(finalRgb * color.rgb, finalAlpha * color.a);
 }
     ]]
 
     game.shaderNeon = love.graphics.newShader(neoncode)
+
+    local firecode = [[
+extern float time;
+
+// Tamanho inverso da textura (1.0 / largura, 1.0 / altura)
+uniform float u_texelW;
+uniform float u_texelH;
+
+// Controlos escalares
+uniform float u_flameHeight;  // Altura da coluna em pixels (ex: 25.0 a 45.0)
+uniform float u_flameWidth;   // Dispersão horizontal (ex: 2.0 a 4.0 para manter focado)
+uniform float u_speed;        // Velocidade da ascensão (ex: 4.0 a 6.0)
+uniform float u_preserveBody; // 1.0 = mantém sprite visível; 0.0 = queima total
+
+// Gerador de ruído 2D rápido
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+        u.y
+    );
+}
+
+vec4 effect(vec4 color, Image texture, vec2 uv, vec2 screenCoords) {
+    vec2 texPx = vec2(u_texelW, u_texelH);
+    vec4 base = Texel(texture, uv);
+
+    // 1. Ruído esticado no eixo vertical (frequência Y menor = línguas de fogo longas)
+    vec2 fireCoord = vec2(uv.x * 20.0, uv.y * 6.0) - vec2(0.0, time * u_speed);
+    float n = noise(fireCoord) * 0.7 + noise(fireCoord * 2.0) * 0.3;
+
+    // Deslocamento lateral moderado para manter o rastro vertical
+    float xOffset = (n - 0.5) * (u_flameWidth * 0.6) * texPx.x;
+
+    // 2. Rastreio vertical profundo (12 passos em direção a baixo)
+    float fireDensity = 0.0;
+    const int PASSOS = 12;
+    for (int i = 1; i <= PASSOS; i++) {
+        float progresso = float(i) / float(PASSOS); // 0.0 (base) a 1.0 (topo)
+
+        // Amostra a textura mais abaixo (+Y)
+        vec2 sampleUV = uv + vec2(xOffset * progresso, progresso * u_flameHeight * texPx.y);
+        float a = Texel(texture, sampleUV).a;
+
+        // Sustentação de energia: potência 0.7 mantém o fogo brilhante por mais tempo
+        float sustentacao = pow(1.0 - progresso, 0.7);
+        fireDensity += a * sustentacao;
+    }
+
+    // Dilatação lateral subtil para preencher os lados do sprite
+    float latEsq = Texel(texture, uv + vec2(-u_flameWidth * 0.4 * texPx.x, 0.0)).a;
+    float latDir = Texel(texture, uv + vec2( u_flameWidth * 0.4 * texPx.x, 0.0)).a;
+    fireDensity += (latEsq + latDir) * 0.3;
+
+    // Normalização com ganho e modulação pelo ruído
+    fireDensity = (fireDensity / float(PASSOS)) * 1.6;
+    fireDensity *= (n * 1.1 + 0.45);
+    fireDensity = clamp(fireDensity, 0.0, 1.0);
+
+    // 3. Gradiente térmico (Preto -> Vermelho -> Laranja -> Amarelo -> Branco)
+    vec3 cVermelho = vec3(0.95, 0.15, 0.0);
+    vec3 cLaranja  = vec3(1.0, 0.55, 0.05);
+    vec3 cAmarelo  = vec3(1.0, 0.95, 0.3);
+    vec3 cBranco   = vec3(1.0, 1.0, 1.0);
+
+    vec3 fogoCol = vec3(0.0);
+    if (fireDensity < 0.30) {
+        fogoCol = mix(vec3(0.0), cVermelho, fireDensity / 0.30);
+    } else if (fireDensity < 0.65) {
+        fogoCol = mix(cVermelho, cLaranja, (fireDensity - 0.30) / 0.35);
+    } else if (fireDensity < 0.88) {
+        fogoCol = mix(cLaranja, cAmarelo, (fireDensity - 0.65) / 0.23);
+    } else {
+        fogoCol = mix(cAmarelo, cBranco, (fireDensity - 0.88) / 0.12);
+    }
+
+    float fogoAlpha = smoothstep(0.06, 0.30, fireDensity);
+
+    // 4. Composição final
+    vec3 corFinal;
+    float alphaFinal;
+
+    if (u_preserveBody > 0.5) {
+        // Mantém o sprite visível, aquecendo-o ligeiramente com a luz do fogo
+        corFinal = mix(fogoCol, base.rgb + fogoCol * 0.35, base.a);
+        alphaFinal = max(base.a, fogoAlpha);
+    } else {
+        // Modo tocha: consome todo o sprite em chamas
+        corFinal = fogoCol;
+        alphaFinal = fogoAlpha;
+    }
+
+    return vec4(corFinal * color.rgb, alphaFinal * color.a);
+}
+]]
+    game.shaderFire = love.graphics.newShader(firecode)
+
+    local electricCode = [[
+extern float time;
+
+// Escalares de dimensão de texel
+uniform float u_texelW;
+uniform float u_texelH;
+
+// Controlos
+uniform float u_radius;       // Alcance dos raios (pixels)
+uniform float u_speed;        // Velocidade dos arcos elétricos
+uniform float u_intensity;    // Brilho do plasma
+uniform float u_psycho;       // Ciclo de cores
+uniform float u_threshold;    // Limiar mínimo RGB (ex: 100/255 = 0.392)
+
+// NOVO: Máscara radial a partir do centro
+uniform float u_centerRadius; // Raio máximo a partir do centro (0.0 a 0.5)
+uniform float u_centerFade;   // Margem de desvanecimento na borda (ex: 0.05 a 0.15)
+
+// Ruído 2D rápido
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+        u.y
+    );
+}
+
+// Ruído fractal (FBM)
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 rot = mat2(0.8, -0.6, 0.6, 0.8);
+    for (int i = 0; i < 4; i++) {
+        v += a * noise(p);
+        p = rot * p * 2.1;
+        a *= 0.48;
+    }
+    return v;
+}
+
+// Paleta Psicodélica
+vec3 rainbowPalette(float t) {
+    vec3 a = vec3(0.1, 0.5, 0.3);
+    vec3 b = vec3(0.7, 0.2, 0.3);
+    vec3 c = vec3(1.0, 1.0, 1.0);
+    vec3 d = vec3(0.00, 0.33, 0.67);
+    return a + b * cos(6.28 * (c * t + d));
+}
+
+// Validação dupla: canais >= threshold E dentro do raio central
+float sampleEligible(Image tex, vec2 coords, float thresh, float maxR, float fade) {
+    vec4 c = Texel(tex, coords);
+    if (c.a < 0.05) return 0.0;
+
+    // Regra dos canais RGB >= x
+    float menorRGB = min(min(c.r, c.g), c.b);
+    float okRGB = step(thresh, menorRGB);
+
+    // Regra do raio central em relação a (0.5, 0.5)
+    float dist = length(coords - vec2(0.5, 0.5));
+    float distMask = 1.0 - smoothstep(maxR - fade, maxR, dist);
+
+    return okRGB * distMask * c.a;
+}
+
+vec4 effect(vec4 color, Image texture, vec2 uv, vec2 screenCoords) {
+    vec2 texPx = vec2(u_texelW, u_texelH);
+    vec4 base = Texel(texture, uv);
+
+    // 1. Procura radial de pontos elegíveis (RGB alto + dentro do raio central)
+    float maskPerto = 0.0;
+    float maskLonge = 0.0;
+    float rDistPerto = u_radius * 0.4;
+    float rDistLonge = u_radius;
+
+    vec2 off1 = vec2(rDistPerto, 0.0) * texPx;
+    vec2 off2 = vec2(0.0, rDistPerto) * texPx;
+    vec2 offD = vec2(rDistPerto * 0.707) * texPx;
+
+    maskPerto += sampleEligible(texture, uv + off1, u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv - off1, u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv + off2, u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv - off2, u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv + offD, u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv - offD, u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv + vec2(offD.x, -offD.y), u_threshold, u_centerRadius, u_centerFade);
+    maskPerto += sampleEligible(texture, uv + vec2(-offD.x, offD.y), u_threshold, u_centerRadius, u_centerFade);
+    maskPerto /= 8.0;
+
+    vec2 offL1 = vec2(rDistLonge, 0.0) * texPx;
+    vec2 offL2 = vec2(0.0, rDistLonge) * texPx;
+    vec2 offLD = vec2(rDistLonge * 0.707) * texPx;
+
+    maskLonge += sampleEligible(texture, uv + offL1, u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv - offL1, u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv + offL2, u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv - offL2, u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv + offLD, u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv - offLD, u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv + vec2(offLD.x, -offLD.y), u_threshold, u_centerRadius, u_centerFade);
+    maskLonge += sampleEligible(texture, uv + vec2(-offLD.x, offLD.y), u_threshold, u_centerRadius, u_centerFade);
+    maskLonge /= 8.0;
+
+    float campoForca = max(maskPerto * 1.3, maskLonge * 0.8);
+
+    // 2. Descargas elétricas distorcidas (Domain Warping)
+    vec2 electricUV = uv * 35.0;
+    float warp = fbm(electricUV + vec2(time * u_speed * 0.5, -time * u_speed));
+    vec2 warpedUV = electricUV + vec2(warp * 4.0, warp * 4.0) + vec2(time * u_speed * 1.2);
+    
+    float descarga = fbm(warpedUV);
+    float raios = pow(abs(sin(descarga * 6.28318)), 12.0);
+
+    // 3. Força e Cor
+    float energiaTotal = (campoForca * 1.5 + raios * campoForca * 4.0) * u_intensity;
+
+    float cicloCor = (uv.x + uv.y) * 0.8 + time * u_psycho + warp * 0.5;
+    vec3 corPsicodelica = rainbowPalette(cicloCor);
+    vec3 raioFinal = mix(corPsicodelica * energiaTotal, vec3(1.0), raios * 0.75 * campoForca);
+
+    // 4. Verificação no pixel base do próprio sprite
+    float selfEligible = 0.0;
+    if (base.a > 0.05) {
+        float distCentro = length(uv - vec2(0.5, 0.5));
+        float maskCentro = 1.0 - smoothstep(u_centerRadius - u_centerFade, u_centerRadius, distCentro);
+        float menorRGB = min(min(base.r, base.g), base.b);
+        selfEligible = step(u_threshold, menorRGB) * maskCentro;
+    }
+
+    vec3 spriteRGB = base.rgb + (raioFinal * 0.5 * selfEligible);
+    vec3 rgbFinal = mix(raioFinal, spriteRGB, base.a);
+    float alphaFinal = clamp(base.a + energiaTotal * 0.85, 0.0, 1.0);
+
+    return vec4(rgbFinal * color.rgb, alphaFinal * color.a);
+}
+]]
+    game.shaderEletric = love.graphics.newShader(electricCode)
+
 end
 
 -- ============================================================
@@ -653,7 +910,9 @@ function game.desenharParticulas()
     end
 
     if game.boss.ativo then
+        game.shaderFireOn(game.boss.img)
         love.graphics.draw(game.boss.img, game.boss.x + game.boss.hw, game.boss.y + game.boss.hh, game.angular, 1, 1, game.boss.hw, game.boss.hh)
+        game.shadeOff()
     end
 end
 
@@ -665,6 +924,100 @@ function game.shaderOn(...)
         game.iluminacao = limite
     end
 end
+
+function game.shaderNeonOn(...)
+    if not game.shaderNeon then
+		game.configurarShader()
+	end
+	local s = game.shaderNeon
+
+	s:send("u_glowR", 0.0)  
+    s:send("u_glowG", 0.85)
+    s:send("u_glowB", 1.0)
+    s:send("u_glowIntensity", 2.2)
+    s:send("u_glowRadius", 3.0)
+
+	s:send("time", love.timer.getTime()) -- OBRIGATÓRIO para animação
+
+    -- 1. VELOCIDADE DA PULSAÇÃO (u_speed)
+    -- Controla o "respirar" lento do neon.
+    -- Baixo (ex: 1.0 a 3.0) = Respiração calma.
+    -- Alto (ex: 10.0+) = Batimento cardíaco rápido.
+    s:send("u_speed", 2.5) 
+
+	-- 2. INTENSIDADE DA FALHA/PISCADE_LA (u_flicker)
+	-- Controla o quanto a luz "cai" quando falha.
+	-- 0.0 = Desativado (apenas pulsação lenta).
+	-- 0.5 = Pisca suavemente.
+	-- 1.0 = Falha agressiva e realista (quase apaga).
+	s:send("u_flicker", 0.99) -- Tenta 0.8 para um efeito visível
+
+	love.graphics.setShader(s)
+end
+
+function game.shaderFireOn(...)    
+    if not game.shaderNeon then
+		game.configurarShader()
+	end
+    local s = game.shaderFire
+    meuSprite = ...
+	    
+    -- Envio de uniforms escalares
+    s:send("time", love.timer.getTime())
+    s:send("u_texelW", 1.0 / meuSprite:getWidth())
+    s:send("u_texelH", 1.0 / meuSprite:getHeight())
+
+    -- Altura e largura das chamas (em pixels)
+    s:send("u_flameHeight", 16.0)   -- Quão alto o fogo sobe acima do sprite
+    s:send("u_flameWidth", 6.0)     -- Quão largo o fogo ondula
+    s:send("u_speed", 3.5)          -- Velocidade da animação
+    s:send("u_preserveBody", 1.0)   -- 1.0 = sprite intacto com fogo ao redor; 0.0 = vira uma tocha
+
+    -- Subir o alcance vertical (ex: de 16 para 30 ou 45 pixels acima)
+    s:send("u_flameHeight", 35.0)
+
+    -- Reduzir a dispersão lateral para focar o rastro numa coluna vertical
+    s:send("u_flameWidth", 3.0)
+
+    -- Uma velocidade mais alta dá a sensação de sucção/chama a disparar para cima
+    s:send("u_speed", 5.0)
+
+    love.graphics.setShader(s)
+end
+
+function game.shaderEletricOn(...)
+    local cx = love.graphics.getWidth() / 2
+    local cy = love.graphics.getHeight() / 2
+    local mx, my = love.mouse.getPosition()
+    local s = game.shaderEletric
+    meuSprite = ...
+
+
+    love.graphics.setShader(s)
+
+    -- Envio dos uniforms escalares
+    s:send("time", love.timer.getTime())
+    s:send("u_texelW", 1.0 / meuSprite:getWidth())
+    s:send("u_texelH", 1.0 / meuSprite:getHeight())
+    
+    -- Ajustes do efeito:
+    s:send("u_radius", 20.0)    -- Alcance dos raios (pixels)
+    s:send("u_speed", 15.5)      -- Tremulação e velocidade dos arcos
+    s:send("u_intensity", 1.2)  -- Densidade da aura
+    s:send("u_psycho", 4.0)     -- Velocidade do ciclo arco-íris
+    
+    s:send("u_threshold", 10.0 / 255.0) -- Filtro RGB >= 100
+
+    -- RAIO A PARTIR DO CENTRO:
+    -- 0.20 = Apenas um núcleo pequeno no centro (ex: um cristal no peito do inimigo)
+    -- 0.35 = Metade do sprite a partir do centro
+    -- 0.50 = Cobre o sprite quase todo a partir do meio
+    s:send("u_centerRadius", 0.40)
+
+    -- SUAVIZAÇÃO DA BORDA DO RAIO:
+    -- Controla a transição suave para as labaredas não cortarem a seco
+    s:send("u_centerFade", 0.08)
+end    
 
 function game.shadeOff()
     love.graphics.setShader()

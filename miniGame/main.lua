@@ -254,25 +254,10 @@ local NEON = {
 
 function desenhaNeon(img, x, y, perfil)
 	-- o menu aparece antes do nivel iniciar; cria o shader por lazy init
-	if not game.shaderNeon then
-		game.configurarShader()
-	end
-	local s = game.shaderNeon
-	-- apenas uniforms escalares (send com tabela para vec2/vec3 nao funciona
-	-- nesta versao do LÖVE)
-	s:send("u_glowR", perfil.cor[1])
-	s:send("u_glowG", perfil.cor[2])
-	s:send("u_glowB", perfil.cor[3])
-	s:send("u_glowIntensity", perfil.intensidade)
-	s:send("u_glowRadius", perfil.raio)
-	s:send("u_shadowX", 2)
-	s:send("u_shadowY", 3)
-	s:send("u_shadowStrength", 0.8)
-	s:send("u_speed", perfil.velocidade)
-	s:send("u_flicker", perfil.tremulacao)
-	love.graphics.setShader(s)
+	game.shaderNeonOn()
+	--game.shaderFireOn(img)
 	love.graphics.draw(img, x, y)
-	love.graphics.setShader()
+	game.shadeOff()
 end
 
 -- ecran de configuracoes (todas as imagens em assets/texto5..11.png)
@@ -283,6 +268,7 @@ function desenhaConfig()
 	desenhaNeon(config_jogo.musica and recursos.imgs.texto8 or recursos.imgs.texto9, 0, 400, NEON.linha)
 	desenhaNeon(recursos.imgs.texto10, 0, 560, NEON.linha) -- V - Voltar ao menu anterior
 	desenhaNeon(recursos.imgs.texto11, 0, 640, NEON.linha) -- ESC - Sair
+	
 end
 
 function endGame()

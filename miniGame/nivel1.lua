@@ -81,6 +81,7 @@ end
 
 function nivel1.desenha()
     game.desenharCenario(400, 400)
+    
 
     -- desenha os inimigos (diferenca especifica do nivel)
     for i, iniTmp in pairs(game.inimigo.lista) do
@@ -95,6 +96,7 @@ function nivel1.desenha()
             game.inimigo.hh
         )
     end
+    
 
     game.desenharParticulas()
 end

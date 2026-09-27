@@ -93,6 +93,7 @@ function nivel4.desenha()
     -- phase, inimigos e prato (desenhados sob a iluminacao do shader)
     love.graphics.draw(phase.img, phase.x, phase.y)
     for i, iniTmp in pairs(game.inimigo.lista) do
+        game.shaderEletricOn(game.inimigo.img)
         love.graphics.draw(
             game.inimigo.img,
             iniTmp.x + game.inimigo.hw,
@@ -103,6 +104,7 @@ function nivel4.desenha()
             game.inimigo.hw,
             game.inimigo.hh
         )
+        game.shadeOff()
     end
     for i, cblTmp in pairs(prato.lista) do
         if cblTmp.viva then
