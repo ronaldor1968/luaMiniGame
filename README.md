@@ -59,17 +59,4 @@ Todas as imágens e sons foram implemeentados por mim e pelo meu filho Pedro, de
   shader de iluminação e render de foreground). Antes cada nível replicava ~1200 linhas;
   agora os níveis ficam enxutos e só definem suas entidades específicas
   (boss/phase/cobra/prato) e a orquestração de `inicia/fim/atualiza/desenha`.
-- **`rotinas.lua` removido** (suas funções foram migradas para `game.lua`).
-- **`main.lua`**: removeu `require "rotinas"`; o debug (record/pontos) segue intacto.
-- **`boss` tornou-se entidade compartilhada** (`game.boss`) — antes era local de cada
-  nível e causava referências globais inválidas no render.
-- **Correções de bugs** (iteração + `table.remove`):
-  - `atualizainimigos1`, `atualizaexplosoes` e as 4 funções de colisão agora coletam os
-    índices a remover antes de `table.remove`, evitando pular entradas.
-  - **Nível 4**: `atualiza` devolvia `false` fixo no 3º valor; agora retorna
-    `not boss.retirado`, alinhado aos demais níveis.
-- **Limpeza**: removido `balasboss` (nunca usado) e `finalizarDesenho` (duplicada em `main.lua`).
 
-Como não há interpretador Lua instalado neste ambiente, a validação foi feita por
-análise estática (balanceamento de chaves/strings e conferência de parâmetros). Recomenda-se
-rodar `love2d miniGame` para confirmar o comportamento em runtime.
